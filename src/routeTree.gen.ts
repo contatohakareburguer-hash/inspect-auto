@@ -9,11 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
+import { Route as InspecaoIdResumoRouteImport } from './routes/inspecao.$id.resumo'
+import { Route as InspecaoIdChecklistRouteImport } from './routes/inspecao.$id.checklist'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -34,17 +42,33 @@ const InspecaoIdVeiculoRoute = InspecaoIdVeiculoRouteImport.update({
   path: '/inspecao/$id/veiculo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InspecaoIdResumoRoute = InspecaoIdResumoRouteImport.update({
+  id: '/inspecao/$id/resumo',
+  path: '/inspecao/$id/resumo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
+  id: '/inspecao/$id/checklist',
+  path: '/inspecao/$id/checklist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRoutesById {
@@ -52,25 +76,60 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/historico' | '/login' | '/inspecao/$id/veiculo'
+  fullPaths:
+    | '/'
+    | '/historico'
+    | '/login'
+    | '/reset-password'
+    | '/inspecao/$id/checklist'
+    | '/inspecao/$id/resumo'
+    | '/inspecao/$id/veiculo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/historico' | '/login' | '/inspecao/$id/veiculo'
-  id: '__root__' | '/' | '/historico' | '/login' | '/inspecao/$id/veiculo'
+  to:
+    | '/'
+    | '/historico'
+    | '/login'
+    | '/reset-password'
+    | '/inspecao/$id/checklist'
+    | '/inspecao/$id/resumo'
+    | '/inspecao/$id/veiculo'
+  id:
+    | '__root__'
+    | '/'
+    | '/historico'
+    | '/login'
+    | '/reset-password'
+    | '/inspecao/$id/checklist'
+    | '/inspecao/$id/resumo'
+    | '/inspecao/$id/veiculo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
+  InspecaoIdResumoRoute: typeof InspecaoIdResumoRoute
   InspecaoIdVeiculoRoute: typeof InspecaoIdVeiculoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -99,6 +158,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InspecaoIdVeiculoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inspecao/$id/resumo': {
+      id: '/inspecao/$id/resumo'
+      path: '/inspecao/$id/resumo'
+      fullPath: '/inspecao/$id/resumo'
+      preLoaderRoute: typeof InspecaoIdResumoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inspecao/$id/checklist': {
+      id: '/inspecao/$id/checklist'
+      path: '/inspecao/$id/checklist'
+      fullPath: '/inspecao/$id/checklist'
+      preLoaderRoute: typeof InspecaoIdChecklistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +179,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
+  InspecaoIdResumoRoute: InspecaoIdResumoRoute,
   InspecaoIdVeiculoRoute: InspecaoIdVeiculoRoute,
 }
 export const routeTree = rootRouteImport
