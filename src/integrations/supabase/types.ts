@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fotos: {
+        Row: {
+          created_at: string
+          id: string
+          inspecao_id: string
+          item_id: string | null
+          storage_path: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inspecao_id: string
+          item_id?: string | null
+          storage_path: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inspecao_id?: string
+          item_id?: string | null
+          storage_path?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotos_inspecao_id_fkey"
+            columns: ["inspecao_id"]
+            isOneToOne: false
+            referencedRelation: "inspecoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotos_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "itens_checklist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspecoes: {
+        Row: {
+          ano: number | null
+          classificacao_final: string | null
+          conclusao: string | null
+          cor: string | null
+          created_at: string
+          finalizada_em: string | null
+          id: string
+          km: number | null
+          marca: string | null
+          modelo: string | null
+          nome_veiculo: string
+          observacoes_gerais: string | null
+          placa: string
+          preco_pedido: number | null
+          score_total: number
+          status: string
+          updated_at: string
+          user_id: string
+          vendedor: string | null
+        }
+        Insert: {
+          ano?: number | null
+          classificacao_final?: string | null
+          conclusao?: string | null
+          cor?: string | null
+          created_at?: string
+          finalizada_em?: string | null
+          id?: string
+          km?: number | null
+          marca?: string | null
+          modelo?: string | null
+          nome_veiculo?: string
+          observacoes_gerais?: string | null
+          placa?: string
+          preco_pedido?: number | null
+          score_total?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          vendedor?: string | null
+        }
+        Update: {
+          ano?: number | null
+          classificacao_final?: string | null
+          conclusao?: string | null
+          cor?: string | null
+          created_at?: string
+          finalizada_em?: string | null
+          id?: string
+          km?: number | null
+          marca?: string | null
+          modelo?: string | null
+          nome_veiculo?: string
+          observacoes_gerais?: string | null
+          placa?: string
+          preco_pedido?: number | null
+          score_total?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vendedor?: string | null
+        }
+        Relationships: []
+      }
+      itens_checklist: {
+        Row: {
+          categoria: string
+          created_at: string
+          id: string
+          inspecao_id: string
+          item_key: string
+          item_nome: string
+          observacao_usuario: string | null
+          ordem: number
+          status: string | null
+          sugestao_sistema: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          id?: string
+          inspecao_id: string
+          item_key: string
+          item_nome: string
+          observacao_usuario?: string | null
+          ordem?: number
+          status?: string | null
+          sugestao_sistema?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          id?: string
+          inspecao_id?: string
+          item_key?: string
+          item_nome?: string
+          observacao_usuario?: string | null
+          ordem?: number
+          status?: string | null
+          sugestao_sistema?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itens_checklist_inspecao_id_fkey"
+            columns: ["inspecao_id"]
+            isOneToOne: false
+            referencedRelation: "inspecoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string | null
+          tipo_login: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          tipo_login?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string | null
+          tipo_login?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
