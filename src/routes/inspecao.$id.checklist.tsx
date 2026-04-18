@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { CHECKLIST, TOTAL_ITENS, type ChecklistItem } from "@/data/checklist";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
-import { Loader2, Camera, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight } from "lucide-react";
+import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
@@ -52,6 +52,7 @@ function ChecklistPage() {
   const [openCat, setOpenCat] = useState<string | null>(CHECKLIST[0].key);
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -154,37 +155,43 @@ function ChecklistPage() {
     }, 600);
   }
 
-  async function uploadFoto(item: ChecklistItem, file: File) {
+  async function uploadFotos(item: ChecklistItem, files: FileList | File[]) {
     if (!user) return;
     const existing = itens[item.key];
     if (!existing || !existing.id) {
       toast.error("Selecione um status (OK/Atenção/Grave) antes de adicionar foto.");
       return;
     }
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${user.id}/${id}/${item.key}-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
-    if (upErr) {
-      toast.error(upErr.message);
-      return;
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    let ok = 0;
+    for (const file of arr) {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${id}/${item.key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
+      if (upErr) {
+        toast.error(upErr.message);
+        continue;
+      }
+      const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
+      const { data, error } = await supabase
+        .from("fotos")
+        .insert({
+          inspecao_id: id,
+          item_id: existing.id,
+          user_id: user.id,
+          storage_path: path,
+          url: pub.publicUrl,
+        })
+        .select("id, item_id, url")
+        .single();
+      if (error) toast.error(error.message);
+      else if (data) {
+        setFotos((p) => [...p, data as FotoRow]);
+        ok++;
+      }
     }
-    const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
-    const { data, error } = await supabase
-      .from("fotos")
-      .insert({
-        inspecao_id: id,
-        item_id: existing.id,
-        user_id: user.id,
-        storage_path: path,
-        url: pub.publicUrl,
-      })
-      .select("id, item_id, url")
-      .single();
-    if (error) toast.error(error.message);
-    else if (data) {
-      setFotos((p) => [...p, data as FotoRow]);
-      toast.success("Foto adicionada");
-    }
+    if (ok > 0) toast.success(ok === 1 ? "Foto adicionada" : `${ok} fotos adicionadas`);
   }
 
   async function removerFoto(foto: FotoRow) {
@@ -338,31 +345,60 @@ function ChecklistPage() {
                               type="file"
                               accept="image/*"
                               capture="environment"
+                              multiple
                               className="hidden"
                               onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) uploadFoto(it, f);
+                                const fs = e.target.files;
+                                if (fs && fs.length) uploadFotos(it, fs);
                                 e.target.value = "";
                               }}
                             />
                           </label>
-                          {fotosItem.map((f) => (
-                            <div key={f.id} className="relative">
-                              <img
-                                src={f.url}
-                                alt="evidência"
-                                className="h-14 w-14 rounded-lg object-cover"
-                                loading="lazy"
-                              />
-                              <button
-                                onClick={() => removerFoto(f)}
-                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
+                          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                            <ImagePlus className="h-3.5 w-3.5" /> Galeria
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const fs = e.target.files;
+                                if (fs && fs.length) uploadFotos(it, fs);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {fotosItem.length > 0 && (
+                            <span className="text-xs text-muted-foreground">{fotosItem.length} foto{fotosItem.length > 1 ? "s" : ""}</span>
+                          )}
                         </div>
+                        {fotosItem.length > 0 && (
+                          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                            {fotosItem.map((f) => (
+                              <div key={f.id} className="relative shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setFotoPreview(f.url)}
+                                  className="block"
+                                >
+                                  <img
+                                    src={f.url}
+                                    alt="evidência"
+                                    className="h-20 w-20 rounded-lg object-cover"
+                                    loading="lazy"
+                                  />
+                                </button>
+                                <button
+                                  onClick={() => removerFoto(f)}
+                                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
+                                  aria-label="Remover foto"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </Card>
                     );
                   })}
@@ -390,6 +426,18 @@ function ChecklistPage() {
               <Section titulo="Consequência">{exemploItem.consequencia}</Section>
               <Section titulo="Sugestão">{exemploItem.sugestao}</Section>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
+        <DialogContent className="max-w-3xl p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Foto</DialogTitle>
+            <DialogDescription>Visualização ampliada da foto</DialogDescription>
+          </DialogHeader>
+          {fotoPreview && (
+            <img src={fotoPreview} alt="Foto ampliada" className="max-h-[80vh] w-full rounded-md object-contain" />
           )}
         </DialogContent>
       </Dialog>

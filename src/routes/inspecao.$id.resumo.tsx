@@ -20,6 +20,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/inspecao/$id/resumo")({
   head: () => ({
@@ -41,13 +48,15 @@ function ResumoPage() {
   const [fotos, setFotos] = useState<PdfFoto[]>([]);
   const [gerando, setGerando] = useState(false);
 
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([
       supabase.from("inspecoes").select("*").eq("id", id).single(),
       supabase
         .from("itens_checklist")
-        .select("item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
+        .select("id, item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id)
         .order("ordem"),
       supabase.from("fotos").select("url, item_id").eq("inspecao_id", id),
@@ -214,6 +223,29 @@ function ResumoPage() {
                         {i.sugestao_sistema && i.status !== "ok" && (
                           <p className="mt-1 text-xs text-muted-foreground">💡 {i.sugestao_sistema}</p>
                         )}
+                        {(() => {
+                          const fs = fotos.filter((f) => f.item_id && f.item_id === (i as PdfItem & { id?: string }).id);
+                          if (fs.length === 0) return null;
+                          return (
+                            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                              {fs.map((f, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setFotoPreview(f.url)}
+                                  className="shrink-0"
+                                >
+                                  <img
+                                    src={f.url}
+                                    alt={`evidência ${idx + 1}`}
+                                    className="h-16 w-16 rounded-md object-cover"
+                                    loading="lazy"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
@@ -250,6 +282,18 @@ function ResumoPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
+        <DialogContent className="max-w-3xl p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Foto</DialogTitle>
+            <DialogDescription>Visualização ampliada</DialogDescription>
+          </DialogHeader>
+          {fotoPreview && (
+            <img src={fotoPreview} alt="Foto ampliada" className="max-h-[80vh] w-full rounded-md object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
