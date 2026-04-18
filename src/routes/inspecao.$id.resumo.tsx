@@ -223,6 +223,29 @@ function ResumoPage() {
                         {i.sugestao_sistema && i.status !== "ok" && (
                           <p className="mt-1 text-xs text-muted-foreground">💡 {i.sugestao_sistema}</p>
                         )}
+                        {(() => {
+                          const fs = fotos.filter((f) => f.item_id && f.item_id === (i as PdfItem & { id?: string }).id);
+                          if (fs.length === 0) return null;
+                          return (
+                            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                              {fs.map((f, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setFotoPreview(f.url)}
+                                  className="shrink-0"
+                                >
+                                  <img
+                                    src={f.url}
+                                    alt={`evidência ${idx + 1}`}
+                                    className="h-16 w-16 rounded-md object-cover"
+                                    loading="lazy"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}
