@@ -52,6 +52,7 @@ function ChecklistPage() {
   const [openCat, setOpenCat] = useState<string | null>(CHECKLIST[0].key);
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
