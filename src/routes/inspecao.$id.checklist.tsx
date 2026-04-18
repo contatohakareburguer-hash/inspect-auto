@@ -155,37 +155,43 @@ function ChecklistPage() {
     }, 600);
   }
 
-  async function uploadFoto(item: ChecklistItem, file: File) {
+  async function uploadFotos(item: ChecklistItem, files: FileList | File[]) {
     if (!user) return;
     const existing = itens[item.key];
     if (!existing || !existing.id) {
       toast.error("Selecione um status (OK/Atenção/Grave) antes de adicionar foto.");
       return;
     }
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${user.id}/${id}/${item.key}-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
-    if (upErr) {
-      toast.error(upErr.message);
-      return;
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    let ok = 0;
+    for (const file of arr) {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${id}/${item.key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
+      if (upErr) {
+        toast.error(upErr.message);
+        continue;
+      }
+      const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
+      const { data, error } = await supabase
+        .from("fotos")
+        .insert({
+          inspecao_id: id,
+          item_id: existing.id,
+          user_id: user.id,
+          storage_path: path,
+          url: pub.publicUrl,
+        })
+        .select("id, item_id, url")
+        .single();
+      if (error) toast.error(error.message);
+      else if (data) {
+        setFotos((p) => [...p, data as FotoRow]);
+        ok++;
+      }
     }
-    const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
-    const { data, error } = await supabase
-      .from("fotos")
-      .insert({
-        inspecao_id: id,
-        item_id: existing.id,
-        user_id: user.id,
-        storage_path: path,
-        url: pub.publicUrl,
-      })
-      .select("id, item_id, url")
-      .single();
-    if (error) toast.error(error.message);
-    else if (data) {
-      setFotos((p) => [...p, data as FotoRow]);
-      toast.success("Foto adicionada");
-    }
+    if (ok > 0) toast.success(ok === 1 ? "Foto adicionada" : `${ok} fotos adicionadas`);
   }
 
   async function removerFoto(foto: FotoRow) {
