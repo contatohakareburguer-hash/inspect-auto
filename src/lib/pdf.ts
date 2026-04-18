@@ -258,7 +258,7 @@ export async function gerarPdfInspecao(args: {
     y += obs.length * 14 + 16;
   }
 
-  // Fotos
+  // Fotos agrupadas por item
   if (fotos.length > 0) {
     doc.addPage();
     y = margin;
@@ -267,29 +267,63 @@ export async function gerarPdfInspecao(args: {
     doc.text("Evidencias fotograficas", margin, y);
     y += 24;
 
+    // Mapear item_id -> { nome, categoria }
+    const itemById: Record<string, { nome: string; categoria: string }> = {};
+    for (const it of itens) {
+      if (it.id) itemById[it.id] = { nome: it.item_nome, categoria: it.categoria };
+    }
+
+    // Agrupar fotos por item_id (preservando ordem do checklist)
+    const grupos = new Map<string, PdfFoto[]>();
+    for (const f of fotos) {
+      const k = f.item_id || "_sem_item";
+      if (!grupos.has(k)) grupos.set(k, []);
+      grupos.get(k)!.push(f);
+    }
+
     const imgW = 240;
     const imgH = 180;
     const gap = 14;
-    let col = 0;
-    for (const f of fotos) {
-      const dataUrl = await loadImageAsDataUrl(f.url);
-      if (!dataUrl) continue;
-      const x = margin + col * (imgW + gap);
-      if (y + imgH > pageHeight - margin) {
+
+    for (const [itemId, lista] of grupos) {
+      const meta = itemId !== "_sem_item" ? itemById[itemId] : null;
+      const titulo = meta ? meta.nome : "Outras fotos";
+
+      if (y + 40 > pageHeight - margin) {
         doc.addPage();
         y = margin;
-        col = 0;
       }
-      try {
-        doc.addImage(dataUrl, "JPEG", x, y, imgW, imgH);
-      } catch {
-        // ignore
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(36, 70, 180);
+      doc.text(`${titulo} (${lista.length})`, margin, y);
+      doc.setTextColor(20);
+      y += 14;
+
+      let col = 0;
+      for (const f of lista) {
+        const dataUrl = await loadImageAsDataUrl(f.url);
+        if (!dataUrl) continue;
+        if (col === 0 && y + imgH > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+        const x = margin + col * (imgW + gap);
+        try {
+          doc.addImage(dataUrl, "JPEG", x, y, imgW, imgH);
+        } catch {
+          // ignore
+        }
+        col++;
+        if (col >= 2) {
+          col = 0;
+          y += imgH + gap;
+        }
       }
-      col++;
-      if (col >= 2) {
-        col = 0;
+      if (col !== 0) {
         y += imgH + gap;
       }
+      y += 8;
     }
   }
 
