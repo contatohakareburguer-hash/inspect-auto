@@ -345,31 +345,60 @@ function ChecklistPage() {
                               type="file"
                               accept="image/*"
                               capture="environment"
+                              multiple
                               className="hidden"
                               onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) uploadFoto(it, f);
+                                const fs = e.target.files;
+                                if (fs && fs.length) uploadFotos(it, fs);
                                 e.target.value = "";
                               }}
                             />
                           </label>
-                          {fotosItem.map((f) => (
-                            <div key={f.id} className="relative">
-                              <img
-                                src={f.url}
-                                alt="evidência"
-                                className="h-14 w-14 rounded-lg object-cover"
-                                loading="lazy"
-                              />
-                              <button
-                                onClick={() => removerFoto(f)}
-                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
+                          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                            <ImagePlus className="h-3.5 w-3.5" /> Galeria
+                            <input
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={(e) => {
+                                const fs = e.target.files;
+                                if (fs && fs.length) uploadFotos(it, fs);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          {fotosItem.length > 0 && (
+                            <span className="text-xs text-muted-foreground">{fotosItem.length} foto{fotosItem.length > 1 ? "s" : ""}</span>
+                          )}
                         </div>
+                        {fotosItem.length > 0 && (
+                          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                            {fotosItem.map((f) => (
+                              <div key={f.id} className="relative shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setFotoPreview(f.url)}
+                                  className="block"
+                                >
+                                  <img
+                                    src={f.url}
+                                    alt="evidência"
+                                    className="h-20 w-20 rounded-lg object-cover"
+                                    loading="lazy"
+                                  />
+                                </button>
+                                <button
+                                  onClick={() => removerFoto(f)}
+                                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
+                                  aria-label="Remover foto"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </Card>
                     );
                   })}
