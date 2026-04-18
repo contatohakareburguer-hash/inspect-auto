@@ -71,21 +71,21 @@ function LoginPage() {
     }
   }
 
-  async function handleGoogle() {
+  async function handleOAuth(provider: "google" | "apple") {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
-        toast.error("Erro ao entrar com Google. Verifique se o provider está ativo no painel.");
+        toast.error(`Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}. Verifique se o provider está ativo no painel.`);
         setLoading(false);
         return;
       }
       if (result.redirected) return;
       navigate({ to: "/" });
     } catch (err: any) {
-      toast.error(err.message || "Erro com Google");
+      toast.error(err.message || "Erro no login social");
       setLoading(false);
     }
   }
