@@ -41,12 +41,9 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#3a5fd9" },
       { property: "og:title", content: "InspectAuto — Inspeção Veicular Profissional" },
       { name: "twitter:title", content: "InspectAuto — Inspeção Veicular Profissional" },
-      { name: "description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão.
-Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
-      { property: "og:description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão.
-Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
-      { name: "twitter:description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão.
-Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
+      { name: "description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão. Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
+      { property: "og:description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão. Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
+      { name: "twitter:description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão. Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d4c661c7-e61f-42ee-bbc7-54dbdc556e28" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/d4c661c7-e61f-42ee-bbc7-54dbdc556e28" },
       { name: "twitter:card", content: "summary_large_image" },
