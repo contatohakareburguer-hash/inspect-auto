@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useLocation } from "@tanstack/react-router";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { PwaProvider } from "@/lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Car, LayoutDashboard, History, LogOut } from "lucide-react";
@@ -38,7 +39,11 @@ export const Route = createRootRoute({
         name: "description",
         content: "App profissional de inspeção veicular: checklist guiado, fotos, score inteligente e relatório PDF.",
       },
-      { name: "theme-color", content: "#3a5fd9" },
+      { name: "theme-color", content: "#0f172a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Inspect" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { property: "og:title", content: "InspectAuto — Inspeção Veicular Profissional" },
       { name: "twitter:title", content: "InspectAuto — Inspeção Veicular Profissional" },
       { name: "description", content: "🚗 Inspect Auto – Inspeção Veicular Inteligente na Palma da Sua Mão. Transforme a forma como você realiza inspeções automotivas com o Inspect Auto." },
@@ -49,7 +54,12 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -72,10 +82,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <AuthProvider>
-      <AppShell />
-      <Toaster richColors position="top-center" />
-    </AuthProvider>
+    <PwaProvider>
+      <AuthProvider>
+        <AppShell />
+        <Toaster richColors position="top-center" />
+      </AuthProvider>
+    </PwaProvider>
   );
 }
 
