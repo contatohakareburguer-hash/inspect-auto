@@ -41,13 +41,15 @@ function ResumoPage() {
   const [fotos, setFotos] = useState<PdfFoto[]>([]);
   const [gerando, setGerando] = useState(false);
 
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([
       supabase.from("inspecoes").select("*").eq("id", id).single(),
       supabase
         .from("itens_checklist")
-        .select("item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
+        .select("id, item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id)
         .order("ordem"),
       supabase.from("fotos").select("url, item_id").eq("inspecao_id", id),
