@@ -21,6 +21,7 @@ export type PdfInspecao = {
 };
 
 export type PdfItem = {
+  id?: string;
   item_key: string;
   item_nome: string;
   categoria: string;
