@@ -8,6 +8,7 @@ import { Plus, Car, FileText, TrendingUp, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { InstallAppButton } from "@/lib/pwa";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,9 +72,12 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!</h1>
-        <p className="text-sm text-muted-foreground">Pronto para uma nova inspeção?</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!</h1>
+          <p className="text-sm text-muted-foreground">Pronto para uma nova inspeção?</p>
+        </div>
+        <InstallAppButton className="shrink-0" />
       </div>
 
       <Card className="p-6 gradient-primary text-primary-foreground shadow-elevated">
