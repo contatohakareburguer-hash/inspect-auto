@@ -429,6 +429,18 @@ function ChecklistPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
+        <DialogContent className="max-w-3xl p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Foto</DialogTitle>
+            <DialogDescription>Visualização ampliada da foto</DialogDescription>
+          </DialogHeader>
+          {fotoPreview && (
+            <img src={fotoPreview} alt="Foto ampliada" className="max-h-[80vh] w-full rounded-md object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
