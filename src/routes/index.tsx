@@ -91,9 +91,16 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!</h1>
-          <p className="text-sm text-muted-foreground">Pronto para uma nova inspeção?</p>
+        <div className="flex items-center gap-3">
+          <img
+            src={logoUrl}
+            alt="InspectAuto"
+            className="h-12 w-12 rounded-xl shadow-card"
+          />
+          <div>
+            <h1 className="text-2xl font-bold">Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!</h1>
+            <p className="text-sm text-muted-foreground">Pronto para uma nova inspeção?</p>
+          </div>
         </div>
         <InstallAppButton className="shrink-0" />
       </div>
