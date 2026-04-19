@@ -1,1 +1,4 @@
 project_id = "ogclwbtarqfyyvdomfmp"
+
+[functions.analisar-danos]
+verify_jwt = true
