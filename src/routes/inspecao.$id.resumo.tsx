@@ -4,11 +4,12 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { CHECKLIST } from "@/data/checklist";
 import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto } from "@/lib/pdf";
+import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ function ResumoPage() {
   const [inspecao, setInspecao] = useState<PdfInspecao | null>(null);
   const [itens, setItens] = useState<PdfItem[]>([]);
   const [fotos, setFotos] = useState<PdfFoto[]>([]);
+  const [danos, setDanos] = useState<Array<{ id: string; tipo: string; severidade: string; localizacao: string | null; descricao: string | null; confianca: number | null; angulo: string | null; foto_id: string | null }>>([]);
   const [gerando, setGerando] = useState(false);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -60,10 +62,16 @@ function ResumoPage() {
         .eq("inspecao_id", id)
         .order("ordem"),
       supabase.from("fotos").select("url, item_id").eq("inspecao_id", id),
-    ]).then(([insRes, itRes, foRes]) => {
+      supabase
+        .from("danos_detectados")
+        .select("id, tipo, severidade, localizacao, descricao, confianca, angulo, foto_id")
+        .eq("inspecao_id", id)
+        .order("created_at", { ascending: false }),
+    ]).then(([insRes, itRes, foRes, daRes]) => {
       if (insRes.data) setInspecao(insRes.data as PdfInspecao);
       setItens((itRes.data as PdfItem[]) || []);
       setFotos((foRes.data as PdfFoto[]) || []);
+      setDanos((daRes.data as any[]) || []);
       setLoading(false);
     });
   }, [id, user]);
