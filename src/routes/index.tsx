@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Car, FileText, TrendingUp, Loader2 } from "lucide-react";
+import { Plus, Car, FileText, TrendingUp, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ function Dashboard() {
   const [inspecoes, setInspecoes] = useState<InspecaoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [creatingIA, setCreatingIA] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -67,6 +68,22 @@ function Dashboard() {
     navigate({ to: "/inspecao/$id/veiculo", params: { id: data.id } });
   }
 
+  async function novaInspecaoIA() {
+    if (!user) return;
+    setCreatingIA(true);
+    const { data, error } = await supabase
+      .from("inspecoes")
+      .insert({ user_id: user.id, nome_veiculo: "", placa: "" })
+      .select("id")
+      .single();
+    setCreatingIA(false);
+    if (error || !data) {
+      toast.error(error?.message || "Erro ao criar");
+      return;
+    }
+    navigate({ to: "/inspecao/$id/inteligente", params: { id: data.id } });
+  }
+
   const total = inspecoes.length;
   const finalizadas = inspecoes.filter((i) => i.status === "finalizada").length;
 
@@ -93,6 +110,29 @@ function Dashboard() {
           {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
           Iniciar inspeção
         </Button>
+      </Card>
+
+      <Card className="p-5 border-primary/30 bg-primary/5">
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-primary/15 p-2 text-primary">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold">Inspeção Inteligente · IA</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Tire fotos guiadas (frente, traseira, laterais) e a IA detecta riscos, amassados e trincas automaticamente.
+            </p>
+            <Button
+              onClick={novaInspecaoIA}
+              disabled={creatingIA}
+              size="sm"
+              className="mt-3"
+            >
+              {creatingIA ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              Iniciar com IA
+            </Button>
+          </div>
+        </div>
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
