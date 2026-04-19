@@ -71,16 +71,29 @@ export async function gerarPdfInspecao(args: {
   // Header
   doc.setFillColor(36, 70, 180);
   doc.rect(0, 0, pageWidth, 90, "F");
+
+  // Logo
+  const logoData = await loadImageAsDataUrl("/logo.png");
+  if (logoData) {
+    try {
+      doc.addImage(logoData, "PNG", margin, 18, 54, 54);
+    } catch {
+      // ignore image errors, keep header text
+    }
+  }
+
   doc.setTextColor(255);
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
-  doc.text("Relatorio de Inspecao Veicular", margin, 50);
-  doc.setFontSize(11);
+  doc.text("InspectAuto", margin + 64, 44);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
+  doc.text("Relatorio de Inspecao Veicular", margin + 64, 60);
+  doc.setFontSize(9);
   doc.text(
     `Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`,
-    margin,
-    72
+    margin + 64,
+    74
   );
 
   doc.setTextColor(20);

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Car, Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2 } from "lucide-react";
+import logoUrl from "@/assets/logo.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -94,9 +95,11 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center gradient-hero px-4 py-8">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-            <Car className="h-9 w-9 text-white" />
-          </div>
+          <img
+            src={logoUrl}
+            alt="InspectAuto"
+            className="mx-auto mb-4 h-20 w-20 rounded-2xl shadow-elevated"
+          />
           <h1 className="text-3xl font-bold text-white">InspectAuto</h1>
           <p className="mt-2 text-sm text-white/80">Inspeção veicular profissional</p>
         </div>
