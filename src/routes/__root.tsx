@@ -3,9 +3,10 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { PwaProvider } from "@/lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Car, LayoutDashboard, History, LogOut } from "lucide-react";
+import { LayoutDashboard, History, LogOut } from "lucide-react";
 
 import appCss from "../styles.css?url";
+import logoUrl from "@/assets/logo.png";
 
 function NotFoundComponent() {
   return (
@@ -125,9 +126,11 @@ function AppShell() {
       <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary text-primary-foreground">
-              <Car className="h-5 w-5" />
-            </div>
+            <img
+              src={logoUrl}
+              alt="InspectAuto"
+              className="h-9 w-9 rounded-lg shadow-card"
+            />
             <div>
               <div className="text-sm font-bold leading-tight">InspectAuto</div>
               <div className="text-[10px] leading-tight text-muted-foreground">Inspeção profissional</div>
