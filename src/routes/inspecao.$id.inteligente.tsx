@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { analisarDanosIA, salvarDanos, SEVERIDADE_LABEL, TIPO_LABEL, type ResultadoFotoIA } from "@/lib/ia";
+import { signedUrls } from "@/lib/storage";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -70,8 +71,10 @@ function InteligentePage() {
       .select("id, url, storage_path, angulo")
       .eq("inspecao_id", id)
       .not("angulo", "is", null)
-      .then(({ data }) => {
-        setFotos((data as FotoCapturada[]) || []);
+      .then(async ({ data }) => {
+        const rows = (data as FotoCapturada[]) || [];
+        const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
+        setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
         setLoading(false);
       });
   }, [id, user]);
@@ -90,14 +93,17 @@ function InteligentePage() {
           toast.error(upErr.message);
           continue;
         }
-        const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
+        const { data: signed } = await supabase.storage
+          .from("inspecao-fotos")
+          .createSignedUrl(path, 60 * 60);
+        const signedUrlStr = signed?.signedUrl ?? "";
         const { data, error } = await supabase
           .from("fotos")
           .insert({
             inspecao_id: id,
             user_id: user.id,
             storage_path: path,
-            url: pub.publicUrl,
+            url: signedUrlStr,
             angulo,
           })
           .select("id, url, storage_path, angulo")
