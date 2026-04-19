@@ -15,6 +15,7 @@ import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
 import { Route as InspecaoIdResumoRouteImport } from './routes/inspecao.$id.resumo'
+import { Route as InspecaoIdInteligenteRouteImport } from './routes/inspecao.$id.inteligente'
 import { Route as InspecaoIdChecklistRouteImport } from './routes/inspecao.$id.checklist'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -47,6 +48,11 @@ const InspecaoIdResumoRoute = InspecaoIdResumoRouteImport.update({
   path: '/inspecao/$id/resumo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InspecaoIdInteligenteRoute = InspecaoIdInteligenteRouteImport.update({
+  id: '/inspecao/$id/inteligente',
+  path: '/inspecao/$id/inteligente',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
   id: '/inspecao/$id/checklist',
   path: '/inspecao/$id/checklist',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
+  '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/inspecao/$id/checklist'
+    | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
     | '/inspecao/$id/veiculo'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/inspecao/$id/checklist'
+    | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
     | '/inspecao/$id/veiculo'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/inspecao/$id/checklist'
+    | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
     | '/inspecao/$id/veiculo'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
+  InspecaoIdInteligenteRoute: typeof InspecaoIdInteligenteRoute
   InspecaoIdResumoRoute: typeof InspecaoIdResumoRoute
   InspecaoIdVeiculoRoute: typeof InspecaoIdVeiculoRoute
 }
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InspecaoIdResumoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inspecao/$id/inteligente': {
+      id: '/inspecao/$id/inteligente'
+      path: '/inspecao/$id/inteligente'
+      fullPath: '/inspecao/$id/inteligente'
+      preLoaderRoute: typeof InspecaoIdInteligenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inspecao/$id/checklist': {
       id: '/inspecao/$id/checklist'
       path: '/inspecao/$id/checklist'
@@ -181,9 +201,19 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
+  InspecaoIdInteligenteRoute: InspecaoIdInteligenteRoute,
   InspecaoIdResumoRoute: InspecaoIdResumoRoute,
   InspecaoIdVeiculoRoute: InspecaoIdVeiculoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

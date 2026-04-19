@@ -441,6 +441,17 @@ function ChecklistPage() {
         </DialogContent>
       </Dialog>
 
+      {iaItem && user && (
+        <AnaliseIADialog
+          open={!!iaItem}
+          onOpenChange={(o) => !o && setIaItem(null)}
+          fotos={iaItem.fotos.map((f) => ({ id: f.id, url: f.url }))}
+          inspecaoId={id}
+          itemId={iaItem.itemId}
+          userId={user.id}
+        />
+      )}
+
       <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
         <DialogContent className="max-w-3xl p-2">
           <DialogHeader className="sr-only">
