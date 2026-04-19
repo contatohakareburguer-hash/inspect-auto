@@ -10,6 +10,7 @@ import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { CHECKLIST } from "@/data/checklist";
 import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto } from "@/lib/pdf";
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
+import { signedUrls } from "@/lib/storage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,16 +62,24 @@ function ResumoPage() {
         .select("id, item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id)
         .order("ordem"),
-      supabase.from("fotos").select("url, item_id").eq("inspecao_id", id),
+      supabase.from("fotos").select("url, item_id, storage_path").eq("inspecao_id", id),
       supabase
         .from("danos_detectados")
         .select("id, tipo, severidade, localizacao, descricao, confianca, angulo, foto_id")
         .eq("inspecao_id", id)
         .order("created_at", { ascending: false }),
-    ]).then(([insRes, itRes, foRes, daRes]) => {
+    ]).then(async ([insRes, itRes, foRes, daRes]) => {
       if (insRes.data) setInspecao(insRes.data as PdfInspecao);
       setItens((itRes.data as PdfItem[]) || []);
-      setFotos((foRes.data as PdfFoto[]) || []);
+      const fRows = ((foRes.data as Array<PdfFoto & { storage_path?: string }>) || []);
+      const paths = fRows.map((f) => f.storage_path || "").filter(Boolean);
+      const urlMap = await signedUrls(paths);
+      setFotos(
+        fRows.map((f) => ({
+          ...f,
+          url: (f.storage_path && urlMap[f.storage_path]) || f.url,
+        })),
+      );
       setDanos((daRes.data as any[]) || []);
       setLoading(false);
     });
