@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { CHECKLIST, TOTAL_ITENS, type ChecklistItem } from "@/data/checklist";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
-import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight } from "lucide-react";
+import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { AnaliseIADialog } from "@/components/AnaliseIADialog";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
