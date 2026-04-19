@@ -14,8 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      danos_detectados: {
+        Row: {
+          angulo: string | null
+          bounding_box: Json | null
+          confianca: number | null
+          created_at: string
+          descricao: string | null
+          foto_id: string | null
+          id: string
+          inspecao_id: string
+          item_id: string | null
+          localizacao: string | null
+          severidade: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          angulo?: string | null
+          bounding_box?: Json | null
+          confianca?: number | null
+          created_at?: string
+          descricao?: string | null
+          foto_id?: string | null
+          id?: string
+          inspecao_id: string
+          item_id?: string | null
+          localizacao?: string | null
+          severidade: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          angulo?: string | null
+          bounding_box?: Json | null
+          confianca?: number | null
+          created_at?: string
+          descricao?: string | null
+          foto_id?: string | null
+          id?: string
+          inspecao_id?: string
+          item_id?: string | null
+          localizacao?: string | null
+          severidade?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "danos_detectados_foto_id_fkey"
+            columns: ["foto_id"]
+            isOneToOne: false
+            referencedRelation: "fotos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "danos_detectados_inspecao_id_fkey"
+            columns: ["inspecao_id"]
+            isOneToOne: false
+            referencedRelation: "inspecoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "danos_detectados_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "itens_checklist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fotos: {
         Row: {
+          analisada_em: string | null
+          angulo: string | null
           created_at: string
           id: string
           inspecao_id: string
@@ -25,6 +97,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          analisada_em?: string | null
+          angulo?: string | null
           created_at?: string
           id?: string
           inspecao_id: string
@@ -34,6 +108,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          analisada_em?: string | null
+          angulo?: string | null
           created_at?: string
           id?: string
           inspecao_id?: string
