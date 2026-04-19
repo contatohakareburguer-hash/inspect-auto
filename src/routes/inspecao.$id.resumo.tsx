@@ -261,7 +261,43 @@ function ResumoPage() {
               </Card>
             );
           })}
+      </div>
+
+      {danos.length > 0 && (
+        <div>
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
+            <Sparkles className="h-5 w-5 text-primary" /> Danos detectados pela IA
+          </h2>
+          <Card className="divide-y">
+            {danos.map((d) => {
+              const corSev =
+                d.severidade === "grave"
+                  ? "bg-destructive text-destructive-foreground"
+                  : d.severidade === "moderado"
+                    ? "bg-warning text-warning-foreground"
+                    : "bg-success text-success-foreground";
+              return (
+                <div key={d.id} className="p-3 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold">
+                      {TIPO_LABEL[d.tipo] ?? d.tipo}
+                      {d.localizacao && <span className="text-muted-foreground"> · {d.localizacao}</span>}
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${corSev}`}>
+                      {SEVERIDADE_LABEL[d.severidade] ?? d.severidade}
+                    </span>
+                  </div>
+                  {d.descricao && <p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p>}
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    {d.confianca != null && <>Confiança {Math.round((d.confianca || 0) * 100)}%</>}
+                    {d.angulo && <> · {d.angulo.replace(/_/g, " ")}</>}
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
         </div>
+      )}
       </div>
 
       <div className="flex gap-2 pt-4">

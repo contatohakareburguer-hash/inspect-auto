@@ -247,10 +247,21 @@ function ChecklistPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Checklist</h1>
-        <p className="text-sm text-muted-foreground">
-          {totalAvaliado} de {TOTAL_ITENS} itens avaliados
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold">Checklist</h1>
+            <p className="text-sm text-muted-foreground">
+              {totalAvaliado} de {TOTAL_ITENS} itens avaliados
+            </p>
+          </div>
+          <Link
+            to="/inspecao/$id/inteligente"
+            params={{ id }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Modo IA
+          </Link>
+        </div>
         <Progress value={progress} className="mt-2 h-2" />
       </div>
 
