@@ -15,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { CHECKLIST, TOTAL_ITENS, type ChecklistItem } from "@/data/checklist";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
-import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight } from "lucide-react";
+import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { AnaliseIADialog } from "@/components/AnaliseIADialog";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -53,6 +54,7 @@ function ChecklistPage() {
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [iaItem, setIaItem] = useState<{ itemId: string; fotos: FotoRow[] } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -245,10 +247,21 @@ function ChecklistPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Checklist</h1>
-        <p className="text-sm text-muted-foreground">
-          {totalAvaliado} de {TOTAL_ITENS} itens avaliados
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold">Checklist</h1>
+            <p className="text-sm text-muted-foreground">
+              {totalAvaliado} de {TOTAL_ITENS} itens avaliados
+            </p>
+          </div>
+          <Link
+            to="/inspecao/$id/inteligente"
+            params={{ id }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Modo IA
+          </Link>
+        </div>
         <Progress value={progress} className="mt-2 h-2" />
       </div>
 
@@ -371,6 +384,15 @@ function ChecklistPage() {
                           {fotosItem.length > 0 && (
                             <span className="text-xs text-muted-foreground">{fotosItem.length} foto{fotosItem.length > 1 ? "s" : ""}</span>
                           )}
+                          {fotosItem.length > 0 && row?.id && (
+                            <button
+                              type="button"
+                              onClick={() => setIaItem({ itemId: row.id, fotos: fotosItem })}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+                            >
+                              <Sparkles className="h-3.5 w-3.5" /> Analisar com IA
+                            </button>
+                          )}
                         </div>
                         {fotosItem.length > 0 && (
                           <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
@@ -429,6 +451,17 @@ function ChecklistPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {iaItem && user && (
+        <AnaliseIADialog
+          open={!!iaItem}
+          onOpenChange={(o) => !o && setIaItem(null)}
+          fotos={iaItem.fotos.map((f) => ({ id: f.id, url: f.url }))}
+          inspecaoId={id}
+          itemId={iaItem.itemId}
+          userId={user.id}
+        />
+      )}
 
       <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
         <DialogContent className="max-w-3xl p-2">

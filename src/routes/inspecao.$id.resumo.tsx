@@ -4,11 +4,12 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { CHECKLIST } from "@/data/checklist";
 import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto } from "@/lib/pdf";
+import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ function ResumoPage() {
   const [inspecao, setInspecao] = useState<PdfInspecao | null>(null);
   const [itens, setItens] = useState<PdfItem[]>([]);
   const [fotos, setFotos] = useState<PdfFoto[]>([]);
+  const [danos, setDanos] = useState<Array<{ id: string; tipo: string; severidade: string; localizacao: string | null; descricao: string | null; confianca: number | null; angulo: string | null; foto_id: string | null }>>([]);
   const [gerando, setGerando] = useState(false);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -60,10 +62,16 @@ function ResumoPage() {
         .eq("inspecao_id", id)
         .order("ordem"),
       supabase.from("fotos").select("url, item_id").eq("inspecao_id", id),
-    ]).then(([insRes, itRes, foRes]) => {
+      supabase
+        .from("danos_detectados")
+        .select("id, tipo, severidade, localizacao, descricao, confianca, angulo, foto_id")
+        .eq("inspecao_id", id)
+        .order("created_at", { ascending: false }),
+    ]).then(([insRes, itRes, foRes, daRes]) => {
       if (insRes.data) setInspecao(insRes.data as PdfInspecao);
       setItens((itRes.data as PdfItem[]) || []);
       setFotos((foRes.data as PdfFoto[]) || []);
+      setDanos((daRes.data as any[]) || []);
       setLoading(false);
     });
   }, [id, user]);
@@ -253,7 +261,43 @@ function ResumoPage() {
               </Card>
             );
           })}
+      </div>
+
+      {danos.length > 0 && (
+        <div>
+          <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
+            <Sparkles className="h-5 w-5 text-primary" /> Danos detectados pela IA
+          </h2>
+          <Card className="divide-y">
+            {danos.map((d) => {
+              const corSev =
+                d.severidade === "grave"
+                  ? "bg-destructive text-destructive-foreground"
+                  : d.severidade === "moderado"
+                    ? "bg-warning text-warning-foreground"
+                    : "bg-success text-success-foreground";
+              return (
+                <div key={d.id} className="p-3 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold">
+                      {TIPO_LABEL[d.tipo] ?? d.tipo}
+                      {d.localizacao && <span className="text-muted-foreground"> · {d.localizacao}</span>}
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${corSev}`}>
+                      {SEVERIDADE_LABEL[d.severidade] ?? d.severidade}
+                    </span>
+                  </div>
+                  {d.descricao && <p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p>}
+                  <div className="mt-1 text-[10px] text-muted-foreground">
+                    {d.confianca != null && <>Confiança {Math.round((d.confianca || 0) * 100)}%</>}
+                    {d.angulo && <> · {d.angulo.replace(/_/g, " ")}</>}
+                  </div>
+                </div>
+              );
+            })}
+          </Card>
         </div>
+      )}
       </div>
 
       <div className="flex gap-2 pt-4">
