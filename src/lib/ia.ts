@@ -15,10 +15,12 @@ export type ResultadoFotoIA = {
 };
 
 export async function analisarDanosIA(
-  fotos: { foto_id: string; url: string; angulo?: string | null }[],
+  fotos: { foto_id: string; url?: string; angulo?: string | null }[],
 ): Promise<ResultadoFotoIA[]> {
+  // Apenas foto_id é enviado; o servidor valida ownership e gera a URL assinada.
+  const payload = fotos.map((f) => ({ foto_id: f.foto_id }));
   const { data, error } = await supabase.functions.invoke("analisar-danos", {
-    body: { fotos },
+    body: { fotos: payload },
   });
   if (error) throw new Error(error.message);
   if (data?.error) throw new Error(data.error);

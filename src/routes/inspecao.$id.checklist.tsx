@@ -18,6 +18,7 @@ import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
 import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { AnaliseIADialog } from "@/components/AnaliseIADialog";
+import { signedUrls } from "@/lib/storage";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -41,6 +42,7 @@ type FotoRow = {
   id: string;
   item_id: string | null;
   url: string;
+  storage_path: string;
 };
 
 function ChecklistPage() {
@@ -63,14 +65,17 @@ function ChecklistPage() {
         .from("itens_checklist")
         .select("id, item_key, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id),
-      supabase.from("fotos").select("id, item_id, url").eq("inspecao_id", id),
-    ]).then(([itensRes, fotosRes]) => {
+      supabase.from("fotos").select("id, item_id, url, storage_path").eq("inspecao_id", id),
+    ]).then(async ([itensRes, fotosRes]) => {
       const map: Record<string, ItemRow> = {};
       (itensRes.data as ItemRow[] | null)?.forEach((r) => {
         map[r.item_key] = r;
       });
       setItens(map);
-      setFotos((fotosRes.data as FotoRow[]) || []);
+      const rows = (fotosRes.data as FotoRow[]) || [];
+      // Refresh signed URLs from storage_path (bucket is private)
+      const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
+      setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
       setLoading(false);
     });
   }, [id, user]);
@@ -175,7 +180,10 @@ function ChecklistPage() {
         toast.error(upErr.message);
         continue;
       }
-      const { data: pub } = supabase.storage.from("inspecao-fotos").getPublicUrl(path);
+      const { data: signed } = await supabase.storage
+        .from("inspecao-fotos")
+        .createSignedUrl(path, 60 * 60);
+      const signedUrlStr = signed?.signedUrl ?? "";
       const { data, error } = await supabase
         .from("fotos")
         .insert({
@@ -183,9 +191,9 @@ function ChecklistPage() {
           item_id: existing.id,
           user_id: user.id,
           storage_path: path,
-          url: pub.publicUrl,
+          url: signedUrlStr,
         })
-        .select("id, item_id, url")
+        .select("id, item_id, url, storage_path")
         .single();
       if (error) toast.error(error.message);
       else if (data) {
@@ -197,7 +205,9 @@ function ChecklistPage() {
   }
 
   async function removerFoto(foto: FotoRow) {
-    await supabase.storage.from("inspecao-fotos").remove([foto.url.split("/inspecao-fotos/")[1] || ""]);
+    if (foto.storage_path) {
+      await supabase.storage.from("inspecao-fotos").remove([foto.storage_path]);
+    }
     await supabase.from("fotos").delete().eq("id", foto.id);
     setFotos((p) => p.filter((f) => f.id !== foto.id));
   }

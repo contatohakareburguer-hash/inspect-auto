@@ -1,6 +1,9 @@
 // Edge function: analisar-danos
-// Recebe uma lista de URLs de fotos e usa Lovable AI (Gemini Vision) para detectar danos automotivos.
-// Retorna um array estruturado de danos por foto.
+// Recebe uma lista de foto_ids do usuário autenticado e usa Lovable AI (Gemini Vision)
+// para detectar danos automotivos. URLs são derivadas server-side a partir do storage_path
+// validado no banco — clientes NÃO podem submeter URLs externas.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +11,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type FotoInput = { foto_id: string; url: string; angulo?: string | null };
+const MAX_FOTOS_POR_REQUEST = 20;
+const SIGNED_URL_EXPIRES = 300; // 5min — somente para o gateway de IA buscar
+const BUCKET = "inspecao-fotos";
+
+type FotoInput = { foto_id: string };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,15 +24,65 @@ Deno.serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return json({ error: "LOVABLE_API_KEY não configurada" }, 500);
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY não configurada" }, 500);
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+      return json({ error: "Supabase env não configurado" }, 500);
     }
 
-    const body = await req.json();
-    const fotos: FotoInput[] = body?.fotos ?? [];
-    if (!Array.isArray(fotos) || fotos.length === 0) {
-      return json({ error: "Envie ao menos uma foto" }, 400);
+    // 1) Authenticate caller
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return json({ error: "Não autenticado" }, 401);
     }
+    const userId = userData.user.id;
+
+    // 2) Validate input
+    const body = await req.json().catch(() => ({}));
+    const fotosIn: FotoInput[] = Array.isArray(body?.fotos) ? body.fotos : [];
+    if (fotosIn.length === 0) return json({ error: "Envie ao menos uma foto" }, 400);
+    if (fotosIn.length > MAX_FOTOS_POR_REQUEST) {
+      return json({ error: `Máximo de ${MAX_FOTOS_POR_REQUEST} fotos por requisição` }, 400);
+    }
+    const fotoIds = Array.from(
+      new Set(
+        fotosIn
+          .map((f) => (typeof f?.foto_id === "string" ? f.foto_id : ""))
+          .filter((s) => s.length > 0),
+      ),
+    );
+    if (fotoIds.length === 0) return json({ error: "foto_id inválido" }, 400);
+
+    // 3) Verify ownership of each foto_id and load storage_path/angulo using user JWT (RLS protects)
+    const { data: fotosDb, error: fotosErr } = await userClient
+      .from("fotos")
+      .select("id, storage_path, angulo, user_id")
+      .in("id", fotoIds);
+    if (fotosErr) return json({ error: fotosErr.message }, 500);
+    const owned = (fotosDb ?? []).filter((f) => f.user_id === userId);
+    if (owned.length === 0) {
+      return json({ error: "Nenhuma foto válida do usuário" }, 403);
+    }
+
+    // 4) Generate short-lived signed URLs server-side (service role) so the AI gateway can fetch
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const paths = owned.map((f) => f.storage_path);
+    const { data: signed, error: signErr } = await adminClient.storage
+      .from(BUCKET)
+      .createSignedUrls(paths, SIGNED_URL_EXPIRES);
+    if (signErr || !signed) return json({ error: "Falha ao gerar URLs" }, 500);
+    const urlByPath: Record<string, string> = {};
+    for (const s of signed) if (s.path && s.signedUrl) urlByPath[s.path] = s.signedUrl;
+
+    const trabalhos = owned
+      .map((f) => ({ foto_id: f.id, angulo: f.angulo, url: urlByPath[f.storage_path] }))
+      .filter((f) => !!f.url);
 
     const resultados: Array<{
       foto_id: string;
@@ -39,8 +96,8 @@ Deno.serve(async (req) => {
       }>;
     }> = [];
 
-    // Analisa uma foto por vez para manter prompts curtos e respostas estáveis.
-    for (const foto of fotos) {
+    // 5) Analisa uma foto por vez para manter prompts curtos e respostas estáveis.
+    for (const foto of trabalhos) {
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
