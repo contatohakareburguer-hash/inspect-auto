@@ -54,6 +54,7 @@ function ChecklistPage() {
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [iaItem, setIaItem] = useState<{ itemId: string; fotos: FotoRow[] } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -371,6 +372,15 @@ function ChecklistPage() {
                           </label>
                           {fotosItem.length > 0 && (
                             <span className="text-xs text-muted-foreground">{fotosItem.length} foto{fotosItem.length > 1 ? "s" : ""}</span>
+                          )}
+                          {fotosItem.length > 0 && row?.id && (
+                            <button
+                              type="button"
+                              onClick={() => setIaItem({ itemId: row.id, fotos: fotosItem })}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+                            >
+                              <Sparkles className="h-3.5 w-3.5" /> Analisar com IA
+                            </button>
                           )}
                         </div>
                         {fotosItem.length > 0 && (
