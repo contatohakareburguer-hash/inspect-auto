@@ -437,7 +437,7 @@ function ChecklistPage() {
                               className="hidden"
                               onChange={(e) => {
                                 const fs = e.target.files;
-                                if (fs && fs.length) uploadFotos(it, fs);
+                                if (fs && fs.length) uploadFotos(cat.key, it, fs);
                                 e.target.value = "";
                               }}
                             />
@@ -451,7 +451,7 @@ function ChecklistPage() {
                               className="hidden"
                               onChange={(e) => {
                                 const fs = e.target.files;
-                                if (fs && fs.length) uploadFotos(it, fs);
+                                if (fs && fs.length) uploadFotos(cat.key, it, fs);
                                 e.target.value = "";
                               }}
                             />
