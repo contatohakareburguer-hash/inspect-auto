@@ -19,8 +19,17 @@ export async function analisarDanosIA(
 ): Promise<ResultadoFotoIA[]> {
   // Apenas foto_id é enviado; o servidor valida ownership e gera a URL assinada.
   const payload = fotos.map((f) => ({ foto_id: f.foto_id }));
+
+  // O gateway da edge function está com verify_jwt=false (necessário porque
+  // tokens ES256 atuais não são suportados pelo verificador legado). Para
+  // manter a autenticação real, encaminhamos o JWT do usuário em um header
+  // próprio que a função valida via supabase-js (fluxo "manual" de auth).
+  const { data: sessionRes } = await supabase.auth.getSession();
+  const accessToken = sessionRes.session?.access_token ?? "";
+
   const { data, error } = await supabase.functions.invoke("analisar-danos", {
     body: { fotos: payload },
+    headers: accessToken ? { "x-user-jwt": accessToken } : undefined,
   });
   if (error) throw new Error(error.message);
   if (data?.error) throw new Error(data.error);

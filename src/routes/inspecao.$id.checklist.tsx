@@ -19,6 +19,7 @@ import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, Ch
 import { toast } from "sonner";
 import { AnaliseIADialog } from "@/components/AnaliseIADialog";
 import { signedUrls } from "@/lib/storage";
+import { compressImage } from "@/lib/imageCompress";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -162,46 +163,110 @@ function ChecklistPage() {
     }, 600);
   }
 
-  async function uploadFotos(item: ChecklistItem, files: FileList | File[]) {
-    if (!user) return;
+  /**
+   * Garante que o item existe no banco antes de receber fotos.
+   * Cria com status null se necessário — o vistoriador pode anexar evidências
+   * antes mesmo de classificar como OK/Atenção/Grave.
+   */
+  async function garantirItem(cat: string, item: ChecklistItem): Promise<ItemRow | null> {
+    if (!user) return null;
     const existing = itens[item.key];
-    if (!existing || !existing.id) {
-      toast.error("Selecione um status (OK/Atenção/Grave) antes de adicionar foto.");
-      return;
+    if (existing && existing.id) return existing;
+    const ordem = CHECKLIST.flatMap((c) => c.itens).findIndex((i) => i.key === item.key);
+    const { data, error } = await supabase
+      .from("itens_checklist")
+      .insert({
+        inspecao_id: id,
+        user_id: user.id,
+        categoria: cat,
+        item_key: item.key,
+        item_nome: item.nome,
+        status: null,
+        observacao_usuario: existing?.observacao_usuario ?? null,
+        ordem,
+      })
+      .select("id, item_key, status, observacao_usuario, sugestao_sistema")
+      .single();
+    if (error) {
+      toast.error(error.message);
+      return null;
     }
+    const row = data as ItemRow;
+    setItens((p) => ({ ...p, [item.key]: row }));
+    return row;
+  }
+
+  async function uploadFotos(cat: string, item: ChecklistItem, files: FileList | File[]) {
+    if (!user) return;
     const arr = Array.from(files);
     if (arr.length === 0) return;
-    let ok = 0;
-    for (const file of arr) {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${user.id}/${id}/${item.key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
-      if (upErr) {
-        toast.error(upErr.message);
-        continue;
+
+    const MAX_MB = 15; // bruto, antes da compressão
+    for (const f of arr) {
+      if (!f.type.startsWith("image/")) {
+        toast.error(`"${f.name}" não é uma imagem.`);
+        return;
       }
-      const { data: signed } = await supabase.storage
-        .from("inspecao-fotos")
-        .createSignedUrl(path, 60 * 60);
-      const signedUrlStr = signed?.signedUrl ?? "";
-      const { data, error } = await supabase
-        .from("fotos")
-        .insert({
-          inspecao_id: id,
-          item_id: existing.id,
-          user_id: user.id,
-          storage_path: path,
-          url: signedUrlStr,
-        })
-        .select("id, item_id, url, storage_path")
-        .single();
-      if (error) toast.error(error.message);
-      else if (data) {
-        setFotos((p) => [...p, data as FotoRow]);
-        ok++;
+      if (f.size > MAX_MB * 1024 * 1024) {
+        toast.error(`"${f.name}" excede ${MAX_MB}MB.`);
+        return;
       }
     }
-    if (ok > 0) toast.success(ok === 1 ? "Foto adicionada" : `${ok} fotos adicionadas`);
+
+    const itemRow = await garantirItem(cat, item);
+    if (!itemRow) return;
+
+    setSavingMap((m) => ({ ...m, [item.key]: true }));
+    const tid = toast.loading(arr.length === 1 ? "Enviando foto..." : `Enviando ${arr.length} fotos...`);
+
+    // Faz cada arquivo: comprime → upload → URL assinada → insert no banco.
+    // Roda em paralelo (Promise.all) — muito mais rápido que sequencial e
+    // evita o app "travar" entre fotos no celular.
+    const tarefas = arr.map(async (rawFile) => {
+      try {
+        const file = await compressImage(rawFile);
+        const ext = "jpg";
+        const path = `${user.id}/${id}/${item.key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("inspecao-fotos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data: signed } = await supabase.storage
+          .from("inspecao-fotos")
+          .createSignedUrl(path, 60 * 60);
+        const signedUrlStr = signed?.signedUrl ?? "";
+        const { data, error } = await supabase
+          .from("fotos")
+          .insert({
+            inspecao_id: id,
+            item_id: itemRow.id,
+            user_id: user.id,
+            storage_path: path,
+            url: signedUrlStr,
+          })
+          .select("id, item_id, url, storage_path")
+          .single();
+        if (error) throw error;
+        return data as FotoRow;
+      } catch (e) {
+        console.error("upload falhou:", e);
+        return null;
+      }
+    });
+
+    const resultados = await Promise.all(tarefas);
+    const novas = resultados.filter((r): r is FotoRow => r !== null);
+    if (novas.length > 0) setFotos((p) => [...p, ...novas]);
+
+    toast.dismiss(tid);
+    if (novas.length === arr.length) {
+      toast.success(novas.length === 1 ? "Foto adicionada" : `${novas.length} fotos adicionadas`);
+    } else if (novas.length > 0) {
+      toast.warning(`${novas.length} de ${arr.length} fotos enviadas.`);
+    } else {
+      toast.error("Falha no envio. Tente novamente.");
+    }
+    setSavingMap((m) => ({ ...m, [item.key]: false }));
   }
 
   async function removerFoto(foto: FotoRow) {
@@ -372,7 +437,7 @@ function ChecklistPage() {
                               className="hidden"
                               onChange={(e) => {
                                 const fs = e.target.files;
-                                if (fs && fs.length) uploadFotos(it, fs);
+                                if (fs && fs.length) uploadFotos(cat.key, it, fs);
                                 e.target.value = "";
                               }}
                             />
@@ -386,7 +451,7 @@ function ChecklistPage() {
                               className="hidden"
                               onChange={(e) => {
                                 const fs = e.target.files;
-                                if (fs && fs.length) uploadFotos(it, fs);
+                                if (fs && fs.length) uploadFotos(cat.key, it, fs);
                                 e.target.value = "";
                               }}
                             />

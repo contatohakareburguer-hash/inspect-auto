@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { analisarDanosIA, salvarDanos, SEVERIDADE_LABEL, TIPO_LABEL, type ResultadoFotoIA } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
+import { compressImage } from "@/lib/imageCompress";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -129,7 +130,7 @@ function InteligentePage() {
     const arr = Array.from(files);
     if (arr.length === 0) return;
 
-    const MAX_MB = 10;
+    const MAX_MB = 15; // bruto, antes da compressão
     for (const file of arr) {
       if (!file.type.startsWith("image/")) {
         toast.error(`"${file.name}" não é uma imagem válida.`);
@@ -142,15 +143,17 @@ function InteligentePage() {
     }
 
     setUploading(angulo);
-    try {
-      for (const file of arr) {
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${id}/ia-${angulo}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("inspecao-fotos").upload(path, file);
-        if (upErr) {
-          toast.error(upErr.message);
-          continue;
-        }
+    const tid = toast.loading(arr.length === 1 ? "Enviando foto..." : `Enviando ${arr.length} fotos...`);
+
+    // Comprime + faz upload de cada arquivo em paralelo (mais rápido e estável no celular).
+    const tarefas = arr.map(async (rawFile) => {
+      try {
+        const file = await compressImage(rawFile);
+        const path = `${user.id}/${id}/ia-${angulo}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+        const { error: upErr } = await supabase.storage
+          .from("inspecao-fotos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
         const { data: signed } = await supabase.storage
           .from("inspecao-fotos")
           .createSignedUrl(path, 60 * 60);
@@ -166,8 +169,25 @@ function InteligentePage() {
           })
           .select("id, url, storage_path, angulo")
           .single();
-        if (error) toast.error(error.message);
-        else if (data) setFotos((p) => [...p, data as FotoCapturada]);
+        if (error) throw error;
+        return data as FotoCapturada;
+      } catch (e) {
+        console.error("upload IA falhou:", e);
+        return null;
+      }
+    });
+
+    try {
+      const resultados = await Promise.all(tarefas);
+      const novas = resultados.filter((r): r is FotoCapturada => r !== null);
+      if (novas.length > 0) setFotos((p) => [...p, ...novas]);
+      toast.dismiss(tid);
+      if (novas.length === arr.length) {
+        toast.success(novas.length === 1 ? "Foto adicionada" : `${novas.length} fotos adicionadas`);
+      } else if (novas.length > 0) {
+        toast.warning(`${novas.length} de ${arr.length} fotos enviadas.`);
+      } else {
+        toast.error("Falha no envio. Tente novamente.");
       }
     } finally {
       setUploading(null);

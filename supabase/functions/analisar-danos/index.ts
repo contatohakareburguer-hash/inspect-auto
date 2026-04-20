@@ -10,7 +10,7 @@ const ALLOWED_ORIGIN = Deno.env.get("APP_URL") ?? "*";
 const corsHeaders = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, x-user-jwt, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const MAX_FOTOS_POR_REQUEST = 20;
@@ -34,10 +34,21 @@ Deno.serve(async (req) => {
       return json({ error: "Supabase env não configurado" }, 500);
     }
 
-    // 1) Authenticate caller
+    // 1) Authenticate caller.
+    // Como o gateway está com verify_jwt=false (tokens ES256 não são aceitos pelo
+    // verificador legado), aceitamos o JWT pelo header customizado x-user-jwt
+    // OU pelo Authorization tradicional, e validamos manualmente via supabase-js.
+    const customJwt = req.headers.get("x-user-jwt") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
+    const bearer = customJwt
+      ? `Bearer ${customJwt}`
+      : authHeader.toLowerCase().startsWith("bearer ")
+        ? authHeader
+        : authHeader
+          ? `Bearer ${authHeader}`
+          : "";
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: bearer } },
     });
     const { data: userData, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userData?.user) {
