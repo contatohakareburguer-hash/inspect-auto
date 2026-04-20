@@ -378,7 +378,9 @@ function ChecklistPage() {
                 <div className="border-t bg-muted/30 p-4 space-y-4">
                   {cat.itens.map((it) => {
                     const row = itens[it.key];
-                    const fotosItem = fotos.filter((f) => f.item_id === row?.id);
+                    const fotosItem = fotos
+                      .filter((f) => f.item_id === row?.id)
+                      .sort((a, b) => a.ordem - b.ordem);
                     return (
                       <Card key={it.key} className="p-4 shadow-card">
                         <div className="mb-3 flex items-start justify-between gap-2">
