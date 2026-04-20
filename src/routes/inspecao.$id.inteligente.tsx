@@ -45,6 +45,48 @@ const ANGULOS = [
   { key: "detalhe", label: "Detalhe / zoom", dica: "Foto aproximada de algum ponto suspeito." },
 ] as const;
 
+/** Mini diagrama SVG top-view do carro indicando de onde fotografar */
+function AnguloSvg({ angulo }: { angulo: string }) {
+  // Corpo do carro (vista de cima): retângulo arredondado centralizado em 60x40
+  const car = { x: 18, y: 10, w: 44, h: 28, rx: 6 };
+  // Seta de câmera: posição e rotação por ângulo
+  const arrows: Record<string, { cx: number; cy: number; rot: number }> = {
+    frontal:           { cx: 40, cy: 2,  rot: 180 },
+    traseira:          { cx: 40, cy: 58, rot: 0   },
+    lateral_esquerda:  { cx: 2,  cy: 28, rot: 90  },
+    lateral_direita:   { cx: 78, cy: 28, rot: 270 },
+    diagonal_frente_esq: { cx: 6,  cy: 4,  rot: 135 },
+    diagonal_tras_dir:   { cx: 74, cy: 52, rot: 315 },
+    detalhe:           { cx: 40, cy: 28, rot: 0   },
+  };
+  const arr = arrows[angulo] ?? arrows.frontal;
+
+  return (
+    <svg viewBox="0 0 80 60" width="64" height="48" aria-hidden="true" style={{ flexShrink: 0 }}>
+      {/* Sombra do carro */}
+      <rect x={car.x + 1} y={car.y + 2} width={car.w} height={car.h} rx={car.rx} fill="rgba(0,0,0,0.08)" />
+      {/* Corpo */}
+      <rect x={car.x} y={car.y} width={car.w} height={car.h} rx={car.rx} fill="#c7d2fe" stroke="#6366f1" strokeWidth="1.5" />
+      {/* Capô/tampa do porta-malas (linha horizontal) */}
+      <line x1={car.x + 4} y1={car.y + 8} x2={car.x + car.w - 4} y2={car.y + 8} stroke="#6366f1" strokeWidth="1" opacity="0.5" />
+      <line x1={car.x + 4} y1={car.y + car.h - 8} x2={car.x + car.w - 4} y2={car.y + car.h - 8} stroke="#6366f1" strokeWidth="1" opacity="0.5" />
+      {/* Câmera / posição do fotógrafo */}
+      {angulo === "detalhe" ? (
+        /* Para detalhe: ícone de lupa centralizado */
+        <g transform={`translate(${arr.cx}, ${arr.cy})`}>
+          <circle cx="0" cy="0" r="5" fill="none" stroke="#f59e0b" strokeWidth="1.8" />
+          <line x1="3.5" y1="3.5" x2="6" y2="6" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" />
+        </g>
+      ) : (
+        /* Seta apontando para o carro */
+        <g transform={`translate(${arr.cx}, ${arr.cy}) rotate(${arr.rot})`}>
+          <polygon points="0,-5 4,3 0,1 -4,3" fill="#f59e0b" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
 type FotoCapturada = {
   id: string;
   url: string;
@@ -65,7 +107,10 @@ function InteligentePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      navigate({ to: "/login" });
+      return;
+    }
     supabase
       .from("fotos")
       .select("id, url, storage_path, angulo")
@@ -83,6 +128,19 @@ function InteligentePage() {
     if (!user) return;
     const arr = Array.from(files);
     if (arr.length === 0) return;
+
+    const MAX_MB = 10;
+    for (const file of arr) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`"${file.name}" não é uma imagem válida.`);
+        return;
+      }
+      if (file.size > MAX_MB * 1024 * 1024) {
+        toast.error(`"${file.name}" excede ${MAX_MB}MB. Reduza o tamanho e tente novamente.`);
+        return;
+      }
+    }
+
     setUploading(angulo);
     try {
       for (const file of arr) {
@@ -202,16 +260,19 @@ function InteligentePage() {
           const isUp = uploading === a.key;
           return (
             <Card key={a.key} className="p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="font-semibold">{a.label}</div>
-                  <div className="text-xs text-muted-foreground">{a.dica}</div>
+              <div className="flex items-start gap-3">
+                <AnguloSvg angulo={a.key} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="font-semibold">{a.label}</div>
+                    {fs.length > 0 && (
+                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success shrink-0">
+                        <Check className="inline h-3 w-3" /> {fs.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{a.dica}</div>
                 </div>
-                {fs.length > 0 && (
-                  <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">
-                    <Check className="inline h-3 w-3" /> {fs.length}
-                  </span>
-                )}
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
@@ -335,7 +396,7 @@ function InteligentePage() {
           )}
         </Button>
         {resultados.length > 0 && (
-          <Button onClick={salvar} disabled={salvando || totalDanos === 0} size="lg" variant="default" className="flex-1">
+          <Button onClick={salvar} disabled={salvando} size="lg" variant="default" className="flex-1">
             {salvando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Salvar e ver resumo
           </Button>
