@@ -482,30 +482,25 @@ function ChecklistPage() {
                           )}
                         </div>
                         {fotosItem.length > 0 && (
-                          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                            {fotosItem.map((f) => (
-                              <div key={f.id} className="relative shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => setFotoPreview(f.url)}
-                                  className="block"
-                                >
-                                  <img
-                                    src={f.url}
-                                    alt="evidência"
-                                    className="h-20 w-20 rounded-lg object-cover"
-                                    loading="lazy"
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => removerFoto(f)}
-                                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                                  aria-label="Remover foto"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
+                          <div className="mt-2">
+                            <SortablePhotoGrid
+                              photos={fotosItem}
+                              onPreview={(f) => setFotoPreview(f.url)}
+                              onRemove={(f) => removerFoto(f)}
+                              onReorder={(next) => {
+                                // Atualiza UI imediatamente preservando fotos de outros itens
+                                const otherIds = new Set(fotosItem.map((f) => f.id));
+                                setFotos((prev) => [
+                                  ...prev.filter((f) => !otherIds.has(f.id)),
+                                  ...next.map((f, idx) => ({ ...f, ordem: idx })),
+                                ]);
+                                // Persiste ordem em background — não bloqueia UI
+                                void persistPhotoOrder(next.map((f) => f.id));
+                              }}
+                            />
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              Segure e arraste para reordenar
+                            </p>
                           </div>
                         )}
                       </Card>
