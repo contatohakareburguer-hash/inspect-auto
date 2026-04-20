@@ -62,7 +62,12 @@ function ResumoPage() {
         .select("id, item_key, item_nome, categoria, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id)
         .order("ordem"),
-      supabase.from("fotos").select("url, item_id, storage_path").eq("inspecao_id", id),
+      supabase
+        .from("fotos")
+        .select("url, item_id, storage_path, ordem")
+        .eq("inspecao_id", id)
+        .order("ordem")
+        .order("created_at"),
       supabase
         .from("danos_detectados")
         .select("id, tipo, severidade, localizacao, descricao, confianca, angulo, foto_id")
