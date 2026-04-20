@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { AnaliseIADialog } from "@/components/AnaliseIADialog";
 import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
+import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
+import { persistPhotoOrder } from "@/lib/photoOrder";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
