@@ -150,8 +150,11 @@ function InteligentePage() {
     setUploading(angulo);
     const tid = toast.loading(arr.length === 1 ? "Enviando foto..." : `Enviando ${arr.length} fotos...`);
 
+    // Próximo índice de ordem dentro do ângulo (começa de 0).
+    const baseOrdem = fotos.filter((f) => f.angulo === angulo).length;
+
     // Comprime + faz upload de cada arquivo em paralelo (mais rápido e estável no celular).
-    const tarefas = arr.map(async (rawFile) => {
+    const tarefas = arr.map(async (rawFile, idx) => {
       try {
         const file = await compressImage(rawFile);
         const path = `${user.id}/${id}/ia-${angulo}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
@@ -171,8 +174,9 @@ function InteligentePage() {
             storage_path: path,
             url: signedUrlStr,
             angulo,
+            ordem: baseOrdem + idx,
           })
-          .select("id, url, storage_path, angulo")
+          .select("id, url, storage_path, angulo, ordem")
           .single();
         if (error) throw error;
         return data as FotoCapturada;
