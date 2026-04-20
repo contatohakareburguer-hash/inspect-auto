@@ -230,7 +230,10 @@ function ChecklistPage() {
     // Faz cada arquivo: comprime → upload → URL assinada → insert no banco.
     // Roda em paralelo (Promise.all) — muito mais rápido que sequencial e
     // evita o app "travar" entre fotos no celular.
-    const tarefas = arr.map(async (rawFile) => {
+    // Próximo índice de ordem dentro do item (começa de 0).
+    const baseOrdem = fotos.filter((f) => f.item_id === itemRow.id).length;
+
+    const tarefas = arr.map(async (rawFile, idx) => {
       try {
         const file = await compressImage(rawFile);
         const ext = "jpg";
@@ -251,8 +254,9 @@ function ChecklistPage() {
             user_id: user.id,
             storage_path: path,
             url: signedUrlStr,
+            ordem: baseOrdem + idx,
           })
-          .select("id, item_id, url, storage_path")
+          .select("id, item_id, url, storage_path, ordem")
           .single();
         if (error) throw error;
         return data as FotoRow;
