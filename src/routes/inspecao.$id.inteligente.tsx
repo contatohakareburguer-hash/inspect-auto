@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { analisarDanosIA, salvarDanos, SEVERIDADE_LABEL, TIPO_LABEL, type ResultadoFotoIA } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
+import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
+import { persistPhotoOrder } from "@/lib/photoOrder";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -93,6 +95,7 @@ type FotoCapturada = {
   url: string;
   storage_path: string;
   angulo: string;
+  ordem: number;
 };
 
 function InteligentePage() {
@@ -114,9 +117,11 @@ function InteligentePage() {
     }
     supabase
       .from("fotos")
-      .select("id, url, storage_path, angulo")
+      .select("id, url, storage_path, angulo, ordem")
       .eq("inspecao_id", id)
       .not("angulo", "is", null)
+      .order("ordem")
+      .order("created_at")
       .then(async ({ data }) => {
         const rows = (data as FotoCapturada[]) || [];
         const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
