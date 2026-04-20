@@ -46,6 +46,7 @@ type FotoRow = {
   item_id: string | null;
   url: string;
   storage_path: string;
+  ordem: number;
 };
 
 function ChecklistPage() {
@@ -68,7 +69,12 @@ function ChecklistPage() {
         .from("itens_checklist")
         .select("id, item_key, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id),
-      supabase.from("fotos").select("id, item_id, url, storage_path").eq("inspecao_id", id),
+      supabase
+        .from("fotos")
+        .select("id, item_id, url, storage_path, ordem")
+        .eq("inspecao_id", id)
+        .order("ordem")
+        .order("created_at"),
     ]).then(async ([itensRes, fotosRes]) => {
       const map: Record<string, ItemRow> = {};
       (itensRes.data as ItemRow[] | null)?.forEach((r) => {
