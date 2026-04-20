@@ -30,6 +30,15 @@ export type PdfItem = {
   sugestao_sistema: string | null;
 };
 
+export type PdfDano = {
+  tipo: string;
+  severidade: string;
+  localizacao: string | null;
+  descricao: string | null;
+  confianca: number | null;
+  angulo: string | null;
+};
+
 export type PdfFoto = {
   url: string;
   item_id: string | null;
@@ -61,8 +70,9 @@ export async function gerarPdfInspecao(args: {
   itens: PdfItem[];
   fotos: PdfFoto[];
   resultado: ResultadoScore;
+  danos?: PdfDano[];
 }): Promise<Blob> {
-  const { inspecao, itens, fotos, resultado } = args;
+  const { inspecao, itens, fotos, resultado, danos = [] } = args;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -338,6 +348,72 @@ export async function gerarPdfInspecao(args: {
       }
       y += 8;
     }
+  }
+
+  // Danos detectados pela IA
+  if (danos.length > 0) {
+    doc.addPage();
+    y = margin;
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(36, 70, 180);
+    doc.text("Danos detectados pela IA", margin, y);
+    doc.setTextColor(20);
+    y += 20;
+
+    const SEV_COLORS: Record<string, [number, number, number]> = {
+      grave:    [255, 220, 220],
+      moderado: [255, 240, 200],
+      leve:     [220, 245, 225],
+    };
+    const SEV_TEXT_COLORS: Record<string, [number, number, number]> = {
+      grave:    [180, 30, 30],
+      moderado: [160, 110, 0],
+      leve:     [30, 120, 60],
+    };
+    const TIPO_LABEL_PDF: Record<string, string> = {
+      risco: "Risco", amassado: "Amassado", trinca: "Trinca",
+      ferrugem: "Ferrugem", desalinhamento: "Desalinhamento",
+      vidro_quebrado: "Vidro quebrado", farol_quebrado: "Farol quebrado", outro: "Outro",
+    };
+    const SEV_LABEL_PDF: Record<string, string> = {
+      leve: "Leve", moderado: "Moderado", grave: "Grave",
+    };
+
+    autoTable(doc, {
+      startY: y,
+      theme: "striped",
+      head: [["Tipo", "Severidade", "Localização", "Descrição", "Confiança", "Ângulo"]],
+      body: danos.map((d) => [
+        TIPO_LABEL_PDF[d.tipo] ?? d.tipo,
+        SEV_LABEL_PDF[d.severidade] ?? d.severidade,
+        d.localizacao ?? "-",
+        d.descricao ?? "-",
+        d.confianca != null ? `${Math.round(d.confianca * 100)}%` : "-",
+        d.angulo ? d.angulo.replace(/_/g, " ") : "-",
+      ]),
+      headStyles: { fillColor: [36, 70, 180] },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 65 },
+        1: { cellWidth: 55 },
+        2: { cellWidth: 90 },
+        3: { cellWidth: 170 },
+        4: { cellWidth: 45 },
+        5: { cellWidth: 65 },
+      },
+      margin: { left: margin, right: margin },
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index === 1) {
+          const sev = String(data.cell.raw ?? "").toLowerCase();
+          const bg = SEV_COLORS[sev];
+          const tc = SEV_TEXT_COLORS[sev];
+          if (bg) { data.cell.styles.fillColor = bg; data.cell.styles.fontStyle = "bold"; }
+          if (tc) data.cell.styles.textColor = tc;
+        }
+      },
+    });
+    y = (doc as any).lastAutoTable.finalY + 16;
   }
 
   // Conclusão final

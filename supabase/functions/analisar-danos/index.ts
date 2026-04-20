@@ -5,8 +5,10 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+const ALLOWED_ORIGIN = Deno.env.get("APP_URL") ?? "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
@@ -110,14 +112,14 @@ Deno.serve(async (req) => {
             {
               role: "system",
               content:
-                "Você é um perito em vistoria veicular. Analise a foto e identifique APENAS danos visíveis na carroceria/lataria/vidros/rodas (riscos, amassados, trincas, ferrugem, peças desalinhadas, faróis quebrados). Se não houver dano visível, retorne lista vazia. Não invente. Use português do Brasil.",
+                "Você é um perito sênior em vistoria veicular com 20 anos de experiência. Analise a foto fornecida e identifique SOMENTE danos visíveis e concretos na carroceria, lataria, vidros, faróis, lanternas, rodas e pneus (riscos, amassados, trincas, ferrugem, peças quebradas ou desalinhadas). Seja objetivo e preciso: descreva ONDE exatamente o dano está (ex: 'porta dianteira esquerda, terço inferior'), o tamanho aproximado quando possível (ex: 'risco de ~20cm'), e o possível impacto no valor de revenda. Se não houver nenhum dano visível, retorne lista vazia — NUNCA invente danos. Use português do Brasil, linguagem técnica mas acessível. Leve em conta o ângulo informado para contextualizar a localização dos danos.",
             },
             {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: `Ângulo da foto: ${foto.angulo || "não informado"}. Identifique danos com tipo, severidade (leve/moderado/grave), localização no veículo (ex: para-choque dianteiro, porta dianteira esquerda) e nível de confiança (0 a 1).`,
+                  text: `Ângulo da foto: ${foto.angulo ? foto.angulo.replace(/_/g, " ") : "não informado"}. Identifique todos os danos visíveis com: tipo (enum), severidade (leve = estético sem urgência / moderado = afeta valor ou requer atenção em breve / grave = compromete segurança ou exige reparo imediato), localização exata no veículo, descrição detalhada incluindo tamanho estimado e impacto no valor, e nível de confiança (0 a 1) da sua detecção.`,
                 },
                 { type: "image_url", image_url: { url: foto.url } },
               ],

@@ -78,10 +78,11 @@ function VeiculoForm() {
   }, [id, user]);
 
   function update<K extends keyof Form>(key: K, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    const updated = { ...form, [key]: value };
+    setForm(updated);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setSavingFlag("saving");
-    debounceRef.current = setTimeout(() => salvar({ ...form, [key]: value }), 600);
+    debounceRef.current = setTimeout(() => salvar(updated), 600);
   }
 
   async function salvar(f: Form) {

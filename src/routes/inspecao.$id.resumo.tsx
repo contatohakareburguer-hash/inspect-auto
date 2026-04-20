@@ -8,7 +8,7 @@ import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles }
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { CHECKLIST } from "@/data/checklist";
-import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto } from "@/lib/pdf";
+import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto, type PdfDano } from "@/lib/pdf";
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
 import {
@@ -69,6 +69,11 @@ function ResumoPage() {
         .eq("inspecao_id", id)
         .order("created_at", { ascending: false }),
     ]).then(async ([insRes, itRes, foRes, daRes]) => {
+      if (insRes.error) { toast.error("Erro ao carregar inspeção: " + insRes.error.message); setLoading(false); return; }
+      if (itRes.error) toast.error("Erro ao carregar checklist: " + itRes.error.message);
+      if (foRes.error) toast.error("Erro ao carregar fotos: " + foRes.error.message);
+      if (daRes.error) toast.error("Erro ao carregar danos: " + daRes.error.message);
+
       if (insRes.data) setInspecao(insRes.data as PdfInspecao);
       setItens((itRes.data as PdfItem[]) || []);
       const fRows = ((foRes.data as Array<PdfFoto & { storage_path?: string }>) || []);
@@ -77,10 +82,27 @@ function ResumoPage() {
       setFotos(
         fRows.map((f) => ({
           ...f,
-          url: (f.storage_path && urlMap[f.storage_path]) || f.url,
+          url: (f.storage_path && urlMap[f.storage_path]) || "",
         })),
       );
       setDanos((daRes.data as any[]) || []);
+      setLoading(false);
+
+      // Salvar score e classificação no banco (calculado a partir dos itens)
+      if (insRes.data && itRes.data) {
+        const itensAvaliados = (itRes.data as PdfItem[]).filter((i) => i.status);
+        const res = calcularScore(
+          itensAvaliados.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem }))
+        );
+        await supabase.from("inspecoes").update({
+          score_total: res.scoreTotal,
+          classificacao_final: res.classificacao,
+          status: "finalizada",
+        }).eq("id", id);
+      }
+    }).catch((e) => {
+      toast.error("Erro inesperado ao carregar inspeção.");
+      console.error(e);
       setLoading(false);
     });
   }, [id, user]);
@@ -111,7 +133,7 @@ function ResumoPage() {
     if (!inspecao) return;
     setGerando(true);
     try {
-      const blob = await gerarPdfInspecao({ inspecao, itens, fotos, resultado });
+      const blob = await gerarPdfInspecao({ inspecao, itens, fotos, resultado, danos: danos as PdfDano[] });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -270,43 +292,43 @@ function ResumoPage() {
               </Card>
             );
           })}
-      </div>
-
-      {danos.length > 0 && (
-        <div>
-          <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
-            <Sparkles className="h-5 w-5 text-primary" /> Danos detectados pela IA
-          </h2>
-          <Card className="divide-y">
-            {danos.map((d) => {
-              const corSev =
-                d.severidade === "grave"
-                  ? "bg-destructive text-destructive-foreground"
-                  : d.severidade === "moderado"
-                    ? "bg-warning text-warning-foreground"
-                    : "bg-success text-success-foreground";
-              return (
-                <div key={d.id} className="p-3 text-sm">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-semibold">
-                      {TIPO_LABEL[d.tipo] ?? d.tipo}
-                      {d.localizacao && <span className="text-muted-foreground"> · {d.localizacao}</span>}
-                    </div>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${corSev}`}>
-                      {SEVERIDADE_LABEL[d.severidade] ?? d.severidade}
-                    </span>
-                  </div>
-                  {d.descricao && <p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p>}
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    {d.confianca != null && <>Confiança {Math.round((d.confianca || 0) * 100)}%</>}
-                    {d.angulo && <> · {d.angulo.replace(/_/g, " ")}</>}
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
         </div>
-      )}
+
+        {danos.length > 0 && (
+          <div className="mt-3">
+            <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
+              <Sparkles className="h-5 w-5 text-primary" /> Danos detectados pela IA
+            </h2>
+            <Card className="divide-y">
+              {danos.map((d) => {
+                const corSev =
+                  d.severidade === "grave"
+                    ? "bg-destructive text-destructive-foreground"
+                    : d.severidade === "moderado"
+                      ? "bg-warning text-warning-foreground"
+                      : "bg-success text-success-foreground";
+                return (
+                  <div key={d.id} className="p-3 text-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-semibold">
+                        {TIPO_LABEL[d.tipo] ?? d.tipo}
+                        {d.localizacao && <span className="text-muted-foreground"> · {d.localizacao}</span>}
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${corSev}`}>
+                        {SEVERIDADE_LABEL[d.severidade] ?? d.severidade}
+                      </span>
+                    </div>
+                    {d.descricao && <p className="mt-1 text-xs text-muted-foreground">{d.descricao}</p>}
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      {d.confianca != null && <>Confiança {Math.round((d.confianca || 0) * 100)}%</>}
+                      {d.angulo && <> · {d.angulo.replace(/_/g, " ")}</>}
+                    </div>
+                  </div>
+                );
+              })}
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2 pt-4">
