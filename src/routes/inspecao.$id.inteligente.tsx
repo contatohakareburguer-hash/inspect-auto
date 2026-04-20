@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { analisarDanosIA, salvarDanos, SEVERIDADE_LABEL, TIPO_LABEL, type ResultadoFotoIA } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
+import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
+import { persistPhotoOrder } from "@/lib/photoOrder";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -93,6 +95,7 @@ type FotoCapturada = {
   url: string;
   storage_path: string;
   angulo: string;
+  ordem: number;
 };
 
 function InteligentePage() {
@@ -114,9 +117,11 @@ function InteligentePage() {
     }
     supabase
       .from("fotos")
-      .select("id, url, storage_path, angulo")
+      .select("id, url, storage_path, angulo, ordem")
       .eq("inspecao_id", id)
       .not("angulo", "is", null)
+      .order("ordem")
+      .order("created_at")
       .then(async ({ data }) => {
         const rows = (data as FotoCapturada[]) || [];
         const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
@@ -145,8 +150,11 @@ function InteligentePage() {
     setUploading(angulo);
     const tid = toast.loading(arr.length === 1 ? "Enviando foto..." : `Enviando ${arr.length} fotos...`);
 
+    // Próximo índice de ordem dentro do ângulo (começa de 0).
+    const baseOrdem = fotos.filter((f) => f.angulo === angulo).length;
+
     // Comprime + faz upload de cada arquivo em paralelo (mais rápido e estável no celular).
-    const tarefas = arr.map(async (rawFile) => {
+    const tarefas = arr.map(async (rawFile, idx) => {
       try {
         const file = await compressImage(rawFile);
         const path = `${user.id}/${id}/ia-${angulo}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
@@ -166,8 +174,9 @@ function InteligentePage() {
             storage_path: path,
             url: signedUrlStr,
             angulo,
+            ordem: baseOrdem + idx,
           })
-          .select("id, url, storage_path, angulo")
+          .select("id, url, storage_path, angulo, ordem")
           .single();
         if (error) throw error;
         return data as FotoCapturada;
@@ -276,7 +285,9 @@ function InteligentePage() {
 
       <div className="space-y-3">
         {ANGULOS.map((a) => {
-          const fs = fotos.filter((f) => f.angulo === a.key);
+          const fs = fotos
+            .filter((f) => f.angulo === a.key)
+            .sort((a, b) => a.ordem - b.ordem);
           const isUp = uploading === a.key;
           return (
             <Card key={a.key} className="p-4">
@@ -335,28 +346,34 @@ function InteligentePage() {
               </div>
 
               {fs.length > 0 && (
-                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                  {fs.map((f) => {
-                    const danosFoto = resultados.find((r) => r.foto_id === f.id)?.danos ?? [];
-                    return (
-                      <div key={f.id} className="relative shrink-0">
-                        <button type="button" onClick={() => setPreviewUrl(f.url)}>
-                          <img src={f.url} alt={a.label} className="h-20 w-20 rounded-lg object-cover" loading="lazy" />
-                        </button>
-                        {danosFoto.length > 0 && (
-                          <span className="absolute bottom-1 left-1 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
-                            {danosFoto.length}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => removerFoto(f)}
-                          className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                <div className="mt-3">
+                  <SortablePhotoGrid
+                    photos={fs}
+                    alt={a.label}
+                    onPreview={(f) => setPreviewUrl(f.url)}
+                    onRemove={(f) => removerFoto(f)}
+                    renderBadge={(f) => {
+                      const danosFoto = resultados.find((r) => r.foto_id === f.id)?.danos ?? [];
+                      if (danosFoto.length === 0) return null;
+                      return (
+                        <span className="pointer-events-none absolute bottom-1 left-1 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
+                          {danosFoto.length}
+                        </span>
+                      );
+                    }}
+                    onReorder={(next) => {
+                      // Atualiza UI mantendo fotos de outros ângulos intactas
+                      const otherIds = new Set(fs.map((f) => f.id));
+                      setFotos((prev) => [
+                        ...prev.filter((f) => !otherIds.has(f.id)),
+                        ...next.map((f, idx) => ({ ...f, ordem: idx })),
+                      ]);
+                      void persistPhotoOrder(next.map((f) => f.id));
+                    }}
+                  />
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Segure e arraste para reordenar
+                  </p>
                 </div>
               )}
             </Card>

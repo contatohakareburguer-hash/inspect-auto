@@ -92,6 +92,7 @@ export type Database = {
           id: string
           inspecao_id: string
           item_id: string | null
+          ordem: number
           storage_path: string
           url: string
           user_id: string
@@ -103,6 +104,7 @@ export type Database = {
           id?: string
           inspecao_id: string
           item_id?: string | null
+          ordem?: number
           storage_path: string
           url: string
           user_id: string
@@ -114,6 +116,7 @@ export type Database = {
           id?: string
           inspecao_id?: string
           item_id?: string | null
+          ordem?: number
           storage_path?: string
           url?: string
           user_id?: string

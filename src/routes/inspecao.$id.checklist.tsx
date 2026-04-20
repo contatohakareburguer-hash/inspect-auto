@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { AnaliseIADialog } from "@/components/AnaliseIADialog";
 import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
+import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
+import { persistPhotoOrder } from "@/lib/photoOrder";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -44,6 +46,7 @@ type FotoRow = {
   item_id: string | null;
   url: string;
   storage_path: string;
+  ordem: number;
 };
 
 function ChecklistPage() {
@@ -66,7 +69,12 @@ function ChecklistPage() {
         .from("itens_checklist")
         .select("id, item_key, status, observacao_usuario, sugestao_sistema")
         .eq("inspecao_id", id),
-      supabase.from("fotos").select("id, item_id, url, storage_path").eq("inspecao_id", id),
+      supabase
+        .from("fotos")
+        .select("id, item_id, url, storage_path, ordem")
+        .eq("inspecao_id", id)
+        .order("ordem")
+        .order("created_at"),
     ]).then(async ([itensRes, fotosRes]) => {
       const map: Record<string, ItemRow> = {};
       (itensRes.data as ItemRow[] | null)?.forEach((r) => {
@@ -222,7 +230,10 @@ function ChecklistPage() {
     // Faz cada arquivo: comprime → upload → URL assinada → insert no banco.
     // Roda em paralelo (Promise.all) — muito mais rápido que sequencial e
     // evita o app "travar" entre fotos no celular.
-    const tarefas = arr.map(async (rawFile) => {
+    // Próximo índice de ordem dentro do item (começa de 0).
+    const baseOrdem = fotos.filter((f) => f.item_id === itemRow.id).length;
+
+    const tarefas = arr.map(async (rawFile, idx) => {
       try {
         const file = await compressImage(rawFile);
         const ext = "jpg";
@@ -243,8 +254,9 @@ function ChecklistPage() {
             user_id: user.id,
             storage_path: path,
             url: signedUrlStr,
+            ordem: baseOrdem + idx,
           })
-          .select("id, item_id, url, storage_path")
+          .select("id, item_id, url, storage_path, ordem")
           .single();
         if (error) throw error;
         return data as FotoRow;
@@ -366,7 +378,9 @@ function ChecklistPage() {
                 <div className="border-t bg-muted/30 p-4 space-y-4">
                   {cat.itens.map((it) => {
                     const row = itens[it.key];
-                    const fotosItem = fotos.filter((f) => f.item_id === row?.id);
+                    const fotosItem = fotos
+                      .filter((f) => f.item_id === row?.id)
+                      .sort((a, b) => a.ordem - b.ordem);
                     return (
                       <Card key={it.key} className="p-4 shadow-card">
                         <div className="mb-3 flex items-start justify-between gap-2">
@@ -470,30 +484,25 @@ function ChecklistPage() {
                           )}
                         </div>
                         {fotosItem.length > 0 && (
-                          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                            {fotosItem.map((f) => (
-                              <div key={f.id} className="relative shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => setFotoPreview(f.url)}
-                                  className="block"
-                                >
-                                  <img
-                                    src={f.url}
-                                    alt="evidência"
-                                    className="h-20 w-20 rounded-lg object-cover"
-                                    loading="lazy"
-                                  />
-                                </button>
-                                <button
-                                  onClick={() => removerFoto(f)}
-                                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
-                                  aria-label="Remover foto"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
+                          <div className="mt-2">
+                            <SortablePhotoGrid
+                              photos={fotosItem}
+                              onPreview={(f) => setFotoPreview(f.url)}
+                              onRemove={(f) => removerFoto(f)}
+                              onReorder={(next) => {
+                                // Atualiza UI imediatamente preservando fotos de outros itens
+                                const otherIds = new Set(fotosItem.map((f) => f.id));
+                                setFotos((prev) => [
+                                  ...prev.filter((f) => !otherIds.has(f.id)),
+                                  ...next.map((f, idx) => ({ ...f, ordem: idx })),
+                                ]);
+                                // Persiste ordem em background — não bloqueia UI
+                                void persistPhotoOrder(next.map((f) => f.id));
+                              }}
+                            />
+                            <p className="mt-1 text-[10px] text-muted-foreground">
+                              Segure e arraste para reordenar
+                            </p>
                           </div>
                         )}
                       </Card>
