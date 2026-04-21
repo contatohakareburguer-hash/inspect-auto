@@ -494,6 +494,16 @@ function InteligentePage() {
         )}
       </div>
 
+      <PhotoCaptionDialog
+        open={!!legendaFoto}
+        initial={legendaFoto?.legenda ?? null}
+        imageUrl={legendaFoto?.url ?? null}
+        onClose={() => setLegendaFoto(null)}
+        onSave={(legenda) => {
+          if (legendaFoto) void salvarLegenda(legendaFoto, legenda);
+        }}
+      />
+
       <Dialog open={!!previewUrl} onOpenChange={(o) => !o && setPreviewUrl(null)}>
         <DialogContent className="max-w-3xl p-2">
           <DialogHeader className="sr-only">
