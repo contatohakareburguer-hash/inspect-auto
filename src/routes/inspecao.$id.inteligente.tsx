@@ -27,6 +27,7 @@ import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
 import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
 import { persistPhotoOrder } from "@/lib/photoOrder";
+import { PhotoCaptionDialog } from "@/components/PhotoCaptionDialog";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -39,14 +40,23 @@ export const Route = createFileRoute("/inspecao/$id/inteligente")({
 });
 
 const ANGULOS = [
-  { key: "frontal", label: "Frente", dica: "Posicione-se a 2 m, capturando o veículo inteiro." },
-  { key: "traseira", label: "Traseira", dica: "Inclua para-choque, lanternas e placa traseira." },
-  { key: "lateral_esquerda", label: "Lateral esquerda", dica: "Toda a lateral, do farol à lanterna." },
-  { key: "lateral_direita", label: "Lateral direita", dica: "Toda a lateral, do farol à lanterna." },
-  { key: "diagonal_frente_esq", label: "Diagonal frente esq.", dica: "Mostra frente + lateral esquerda." },
-  { key: "diagonal_tras_dir", label: "Diagonal traseira dir.", dica: "Mostra traseira + lateral direita." },
-  { key: "detalhe", label: "Detalhe / zoom", dica: "Foto aproximada de algum ponto suspeito." },
+  { key: "frontal", label: "Frente", grupo: "Exterior", dica: "Posicione-se a 2 m, capturando o veículo inteiro." },
+  { key: "traseira", label: "Traseira", grupo: "Exterior", dica: "Inclua para-choque, lanternas e placa traseira." },
+  { key: "lateral_esquerda", label: "Lateral esquerda", grupo: "Exterior", dica: "Toda a lateral, do farol à lanterna." },
+  { key: "lateral_direita", label: "Lateral direita", grupo: "Exterior", dica: "Toda a lateral, do farol à lanterna." },
+  { key: "diagonal_frente_esq", label: "Diagonal frente esq.", grupo: "Exterior", dica: "Mostra frente + lateral esquerda." },
+  { key: "diagonal_tras_dir", label: "Diagonal traseira dir.", grupo: "Exterior", dica: "Mostra traseira + lateral direita." },
+  { key: "teto", label: "Teto", grupo: "Exterior", dica: "Capture o teto se possível (de cima ou de uma rampa)." },
+  { key: "rodas", label: "Rodas e pneus", grupo: "Exterior", dica: "Aproxime-se de cada roda, mostrando aro e banda do pneu." },
+  { key: "painel", label: "Painel", grupo: "Interior", dica: "Mostre painel completo com odômetro ligado." },
+  { key: "bancos_dianteiros", label: "Bancos dianteiros", grupo: "Interior", dica: "Estado dos estofados, costuras e regulagens." },
+  { key: "bancos_traseiros", label: "Bancos traseiros", grupo: "Interior", dica: "Bancos de trás, encosto e cintos." },
+  { key: "porta_malas", label: "Porta-malas", grupo: "Interior", dica: "Forração, estepe, ferramentas e fundo." },
+  { key: "motor", label: "Motor", grupo: "Mecânica", dica: "Capô aberto: motor, fluidos e mangueiras." },
+  { key: "detalhe", label: "Detalhe / zoom", grupo: "Outros", dica: "Foto aproximada de algum ponto suspeito." },
 ] as const;
+
+const GRUPOS = ["Exterior", "Interior", "Mecânica", "Outros"] as const;
 
 /** Mini diagrama SVG top-view do carro indicando de onde fotografar */
 function AnguloSvg({ angulo }: { angulo: string }) {
@@ -60,16 +70,26 @@ function AnguloSvg({ angulo }: { angulo: string }) {
     lateral_direita:   { cx: 78, cy: 28, rot: 270 },
     diagonal_frente_esq: { cx: 6,  cy: 4,  rot: 135 },
     diagonal_tras_dir:   { cx: 74, cy: 52, rot: 315 },
+    teto:              { cx: 40, cy: 24, rot: 0   },
+    rodas:             { cx: 18, cy: 40, rot: 270 },
+    painel:            { cx: 40, cy: 18, rot: 180 },
+    bancos_dianteiros: { cx: 40, cy: 22, rot: 180 },
+    bancos_traseiros:  { cx: 40, cy: 38, rot: 0   },
+    porta_malas:       { cx: 40, cy: 50, rot: 0   },
+    motor:             { cx: 40, cy: 14, rot: 180 },
     detalhe:           { cx: 40, cy: 28, rot: 0   },
   };
   const arr = arrows[angulo] ?? arrows.frontal;
+  const isInterior = ["painel", "bancos_dianteiros", "bancos_traseiros", "porta_malas", "motor"].includes(angulo);
 
   return (
     <svg viewBox="0 0 80 60" width="64" height="48" aria-hidden="true" style={{ flexShrink: 0 }}>
       {/* Sombra do carro */}
       <rect x={car.x + 1} y={car.y + 2} width={car.w} height={car.h} rx={car.rx} fill="rgba(0,0,0,0.08)" />
       {/* Corpo */}
-      <rect x={car.x} y={car.y} width={car.w} height={car.h} rx={car.rx} fill="#c7d2fe" stroke="#6366f1" strokeWidth="1.5" />
+      <rect x={car.x} y={car.y} width={car.w} height={car.h} rx={car.rx}
+        fill={isInterior ? "#fde68a" : "#c7d2fe"}
+        stroke={isInterior ? "#d97706" : "#6366f1"} strokeWidth="1.5" />
       {/* Capô/tampa do porta-malas (linha horizontal) */}
       <line x1={car.x + 4} y1={car.y + 8} x2={car.x + car.w - 4} y2={car.y + 8} stroke="#6366f1" strokeWidth="1" opacity="0.5" />
       <line x1={car.x + 4} y1={car.y + car.h - 8} x2={car.x + car.w - 4} y2={car.y + car.h - 8} stroke="#6366f1" strokeWidth="1" opacity="0.5" />
@@ -79,6 +99,12 @@ function AnguloSvg({ angulo }: { angulo: string }) {
         <g transform={`translate(${arr.cx}, ${arr.cy})`}>
           <circle cx="0" cy="0" r="5" fill="none" stroke="#f59e0b" strokeWidth="1.8" />
           <line x1="3.5" y1="3.5" x2="6" y2="6" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" />
+        </g>
+      ) : isInterior ? (
+        /* Para interior: ícone de câmera dentro do carro */
+        <g transform={`translate(${arr.cx}, ${arr.cy})`}>
+          <circle cx="0" cy="0" r="3.5" fill="#dc2626" />
+          <circle cx="0" cy="0" r="1.5" fill="#fef2f2" />
         </g>
       ) : (
         /* Seta apontando para o carro */
@@ -96,6 +122,7 @@ type FotoCapturada = {
   storage_path: string;
   angulo: string;
   ordem: number;
+  legenda: string | null;
 };
 
 function InteligentePage() {
@@ -109,6 +136,7 @@ function InteligentePage() {
   const [resultados, setResultados] = useState<ResultadoFotoIA[]>([]);
   const [salvando, setSalvando] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [legendaFoto, setLegendaFoto] = useState<FotoCapturada | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -117,7 +145,7 @@ function InteligentePage() {
     }
     supabase
       .from("fotos")
-      .select("id, url, storage_path, angulo, ordem")
+      .select("id, url, storage_path, angulo, ordem, legenda")
       .eq("inspecao_id", id)
       .not("angulo", "is", null)
       .order("ordem")
@@ -176,7 +204,7 @@ function InteligentePage() {
             angulo,
             ordem: baseOrdem + idx,
           })
-          .select("id, url, storage_path, angulo, ordem")
+          .select("id, url, storage_path, angulo, ordem, legenda")
           .single();
         if (error) throw error;
         return data as FotoCapturada;
@@ -214,7 +242,17 @@ function InteligentePage() {
     if (fotos.length === 0) {
       toast.error("Capture ao menos uma foto.");
       return;
+  }
+
+  async function salvarLegenda(foto: FotoCapturada, legenda: string | null) {
+    const { error } = await supabase.from("fotos").update({ legenda }).eq("id", foto.id);
+    if (error) {
+      toast.error("Erro ao salvar legenda");
+      return;
     }
+    setFotos((p) => p.map((f) => (f.id === foto.id ? { ...f, legenda } : f)));
+    toast.success(legenda ? "Legenda salva" : "Legenda removida");
+  }
     setAnalisando(true);
     setResultados([]);
     try {
