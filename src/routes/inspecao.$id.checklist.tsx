@@ -22,6 +22,7 @@ import { signedUrls } from "@/lib/storage";
 import { compressImage } from "@/lib/imageCompress";
 import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
 import { persistPhotoOrder } from "@/lib/photoOrder";
+import { PhotoCaptionDialog } from "@/components/PhotoCaptionDialog";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -47,6 +48,7 @@ type FotoRow = {
   url: string;
   storage_path: string;
   ordem: number;
+  legenda: string | null;
 };
 
 function ChecklistPage() {
@@ -60,6 +62,7 @@ function ChecklistPage() {
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [legendaFoto, setLegendaFoto] = useState<FotoRow | null>(null);
   const [iaItem, setIaItem] = useState<{ itemId: string; fotos: FotoRow[] } | null>(null);
 
   useEffect(() => {
@@ -71,7 +74,7 @@ function ChecklistPage() {
         .eq("inspecao_id", id),
       supabase
         .from("fotos")
-        .select("id, item_id, url, storage_path, ordem")
+        .select("id, item_id, url, storage_path, ordem, legenda")
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
@@ -256,7 +259,7 @@ function ChecklistPage() {
             url: signedUrlStr,
             ordem: baseOrdem + idx,
           })
-          .select("id, item_id, url, storage_path, ordem")
+          .select("id, item_id, url, storage_path, ordem, legenda")
           .single();
         if (error) throw error;
         return data as FotoRow;
@@ -287,6 +290,16 @@ function ChecklistPage() {
     }
     await supabase.from("fotos").delete().eq("id", foto.id);
     setFotos((p) => p.filter((f) => f.id !== foto.id));
+  }
+
+  async function salvarLegenda(foto: FotoRow, legenda: string | null) {
+    const { error } = await supabase.from("fotos").update({ legenda }).eq("id", foto.id);
+    if (error) {
+      toast.error("Erro ao salvar legenda");
+      return;
+    }
+    setFotos((p) => p.map((f) => (f.id === foto.id ? { ...f, legenda } : f)));
+    toast.success(legenda ? "Legenda salva" : "Legenda removida");
   }
 
   async function finalizar() {
@@ -489,6 +502,7 @@ function ChecklistPage() {
                               photos={fotosItem}
                               onPreview={(f) => setFotoPreview(f.url)}
                               onRemove={(f) => removerFoto(f)}
+                              onEditCaption={(f) => setLegendaFoto(f)}
                               onReorder={(next) => {
                                 // Atualiza UI imediatamente preservando fotos de outros itens
                                 const otherIds = new Set(fotosItem.map((f) => f.id));
@@ -501,7 +515,7 @@ function ChecklistPage() {
                               }}
                             />
                             <p className="mt-1 text-[10px] text-muted-foreground">
-                              Segure e arraste para reordenar
+                              Toque no lápis para legendar · segure e arraste para reordenar
                             </p>
                           </div>
                         )}
@@ -546,6 +560,16 @@ function ChecklistPage() {
           userId={user.id}
         />
       )}
+
+      <PhotoCaptionDialog
+        open={!!legendaFoto}
+        initial={legendaFoto?.legenda ?? null}
+        imageUrl={legendaFoto?.url ?? null}
+        onClose={() => setLegendaFoto(null)}
+        onSave={(legenda) => {
+          if (legendaFoto) void salvarLegenda(legendaFoto, legenda);
+        }}
+      />
 
       <Dialog open={!!fotoPreview} onOpenChange={(o) => !o && setFotoPreview(null)}>
         <DialogContent className="max-w-3xl p-2">
