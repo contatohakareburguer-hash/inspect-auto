@@ -19,7 +19,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { X, GripVertical } from "lucide-react";
+import { X, GripVertical, Pencil } from "lucide-react";
 
 /**
  * Grade horizontal de fotos com reordenação por arrastar.
@@ -34,6 +34,7 @@ import { X, GripVertical } from "lucide-react";
 export type SortablePhoto = {
   id: string;
   url: string;
+  legenda?: string | null;
 };
 
 type Props<T extends SortablePhoto> = {
@@ -41,6 +42,7 @@ type Props<T extends SortablePhoto> = {
   onReorder: (next: T[]) => void;
   onRemove?: (photo: T) => void;
   onPreview?: (photo: T) => void;
+  onEditCaption?: (photo: T) => void;
   /** Conteúdo extra renderizado dentro de cada card (ex: badge de IA). */
   renderBadge?: (photo: T) => React.ReactNode;
   /** Tamanho da miniatura em pixels. Default 80. */
@@ -54,6 +56,7 @@ export function SortablePhotoGrid<T extends SortablePhoto>({
   onReorder,
   onRemove,
   onPreview,
+  onEditCaption,
   renderBadge,
   size = 80,
   alt = "Foto",
@@ -108,6 +111,7 @@ export function SortablePhotoGrid<T extends SortablePhoto>({
               alt={alt}
               onRemove={onRemove}
               onPreview={onPreview}
+              onEditCaption={onEditCaption}
               renderBadge={renderBadge}
             />
           ))}
@@ -133,6 +137,7 @@ function SortableItem<T extends SortablePhoto>({
   alt,
   onRemove,
   onPreview,
+  onEditCaption,
   renderBadge,
 }: {
   photo: T;
@@ -140,6 +145,7 @@ function SortableItem<T extends SortablePhoto>({
   alt: string;
   onRemove?: (photo: T) => void;
   onPreview?: (photo: T) => void;
+  onEditCaption?: (photo: T) => void;
   renderBadge?: (photo: T) => React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -184,6 +190,26 @@ function SortableItem<T extends SortablePhoto>({
       <div className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/45 p-0.5 text-white">
         <GripVertical className="h-3 w-3" />
       </div>
+
+      {/* Botão de legenda (lápis) */}
+      {onEditCaption && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditCaption(photo);
+          }}
+          className={`absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full shadow ${
+            photo.legenda
+              ? "bg-primary text-primary-foreground"
+              : "bg-black/55 text-white"
+          }`}
+          aria-label={photo.legenda ? "Editar legenda" : "Adicionar legenda"}
+          title={photo.legenda ?? "Adicionar legenda"}
+        >
+          <Pencil className="h-3 w-3" />
+        </button>
+      )}
 
       {renderBadge?.(photo)}
 
