@@ -468,6 +468,45 @@ export async function gerarPdfInspecao(args: {
     { align: "center" }
   );
 
+  // Assinaturas
+  if (assinaturaVistoriador || assinaturaCliente) {
+    const assY = 320;
+    const boxW = (pageWidth - margin * 2 - 20) / 2;
+    const boxH = 90;
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(36, 70, 180);
+    doc.text("Assinaturas", margin, assY - 14);
+    doc.setTextColor(20);
+
+    // Vistoriador
+    doc.setDrawColor(180);
+    doc.rect(margin, assY, boxW, boxH);
+    if (assinaturaVistoriador) {
+      try { doc.addImage(assinaturaVistoriador, "PNG", margin + 4, assY + 4, boxW - 8, boxH - 22); } catch { /* ignore */ }
+    }
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("Vistoriador responsavel", margin + 4, assY + boxH - 8);
+    if (inspecao.vendedor) {
+      doc.setFont("helvetica", "bold");
+      doc.text(inspecao.vendedor.replace(/[^\x00-\x7F]/g, ""), margin + 4, assY + boxH + 6);
+    }
+
+    // Cliente
+    const xCli = margin + boxW + 20;
+    doc.rect(xCli, assY, boxW, boxH);
+    if (assinaturaCliente) {
+      try { doc.addImage(assinaturaCliente, "PNG", xCli + 4, assY + 4, boxW - 8, boxH - 22); } catch { /* ignore */ }
+    }
+    doc.setFont("helvetica", "normal");
+    doc.text("Cliente / proprietario", xCli + 4, assY + boxH - 8);
+    if (nomeCliente) {
+      doc.setFont("helvetica", "bold");
+      doc.text(nomeCliente.replace(/[^\x00-\x7F]/g, ""), xCli + 4, assY + boxH + 6);
+    }
+  }
+
   // Footer pages
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
