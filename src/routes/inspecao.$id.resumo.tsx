@@ -4,13 +4,16 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { CHECKLIST } from "@/data/checklist";
 import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto, type PdfDano } from "@/lib/pdf";
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
+import { SignaturePad } from "@/components/SignaturePad";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +53,10 @@ function ResumoPage() {
   const [fotos, setFotos] = useState<PdfFoto[]>([]);
   const [danos, setDanos] = useState<Array<{ id: string; tipo: string; severidade: string; localizacao: string | null; descricao: string | null; confianca: number | null; angulo: string | null; foto_id: string | null }>>([]);
   const [gerando, setGerando] = useState(false);
+  const [assinaturaVistoriador, setAssinaturaVistoriador] = useState<string | null>(null);
+  const [assinaturaCliente, setAssinaturaCliente] = useState<string | null>(null);
+  const [nomeCliente, setNomeCliente] = useState("");
+  const [salvandoAss, setSalvandoAss] = useState(false);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
 
@@ -64,7 +71,7 @@ function ResumoPage() {
         .order("ordem"),
       supabase
         .from("fotos")
-        .select("url, item_id, storage_path, ordem")
+        .select("url, item_id, storage_path, ordem, legenda")
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
@@ -79,7 +86,13 @@ function ResumoPage() {
       if (foRes.error) toast.error("Erro ao carregar fotos: " + foRes.error.message);
       if (daRes.error) toast.error("Erro ao carregar danos: " + daRes.error.message);
 
-      if (insRes.data) setInspecao(insRes.data as PdfInspecao);
+      if (insRes.data) {
+        const ins = insRes.data as PdfInspecao & { assinatura_vistoriador?: string | null; assinatura_cliente?: string | null; nome_cliente?: string | null };
+        setInspecao(ins);
+        setAssinaturaVistoriador(ins.assinatura_vistoriador ?? null);
+        setAssinaturaCliente(ins.assinatura_cliente ?? null);
+        setNomeCliente(ins.nome_cliente ?? "");
+      }
       setItens((itRes.data as PdfItem[]) || []);
       const fRows = ((foRes.data as Array<PdfFoto & { storage_path?: string }>) || []);
       const paths = fRows.map((f) => f.storage_path || "").filter(Boolean);
@@ -138,7 +151,16 @@ function ResumoPage() {
     if (!inspecao) return;
     setGerando(true);
     try {
-      const blob = await gerarPdfInspecao({ inspecao, itens, fotos, resultado, danos: danos as PdfDano[] });
+      const blob = await gerarPdfInspecao({
+        inspecao,
+        itens,
+        fotos,
+        resultado,
+        danos: danos as PdfDano[],
+        assinaturaVistoriador,
+        assinaturaCliente,
+        nomeCliente,
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -151,6 +173,21 @@ function ResumoPage() {
     } finally {
       setGerando(false);
     }
+  }
+
+  async function salvarAssinaturas() {
+    setSalvandoAss(true);
+    const { error } = await supabase
+      .from("inspecoes")
+      .update({
+        assinatura_vistoriador: assinaturaVistoriador,
+        assinatura_cliente: assinaturaCliente,
+        nome_cliente: nomeCliente || null,
+      })
+      .eq("id", id);
+    setSalvandoAss(false);
+    if (error) toast.error("Erro ao salvar: " + error.message);
+    else toast.success("Assinaturas salvas");
   }
 
   async function compartilharWhatsapp() {
@@ -277,7 +314,8 @@ function ResumoPage() {
                                   key={idx}
                                   type="button"
                                   onClick={() => setFotoPreview(f.url)}
-                                  className="shrink-0"
+                                  className="shrink-0 text-left"
+                                  title={f.legenda ?? undefined}
                                 >
                                   <img
                                     src={f.url}
@@ -285,6 +323,11 @@ function ResumoPage() {
                                     className="h-16 w-16 rounded-md object-cover"
                                     loading="lazy"
                                   />
+                                  {f.legenda && (
+                                    <p className="mt-1 line-clamp-2 max-w-[64px] text-[9px] text-muted-foreground">
+                                      {f.legenda}
+                                    </p>
+                                  )}
                                 </button>
                               ))}
                             </div>
@@ -335,6 +378,46 @@ function ResumoPage() {
           </div>
         )}
       </div>
+
+      <Card className="p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <PenLine className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Assinaturas</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SignaturePad
+            label="Vistoriador responsável"
+            value={assinaturaVistoriador}
+            onChange={setAssinaturaVistoriador}
+          />
+          <div className="space-y-2">
+            <SignaturePad
+              label="Cliente / proprietário"
+              value={assinaturaCliente}
+              onChange={setAssinaturaCliente}
+            />
+            <div>
+              <Label htmlFor="nome_cliente" className="text-xs">Nome do cliente</Label>
+              <Input
+                id="nome_cliente"
+                value={nomeCliente}
+                onChange={(e) => setNomeCliente(e.target.value)}
+                placeholder="Nome completo"
+                className="h-9"
+              />
+            </div>
+          </div>
+        </div>
+        <Button
+          onClick={salvarAssinaturas}
+          disabled={salvandoAss}
+          variant="outline"
+          className="mt-3 w-full"
+        >
+          {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Salvar assinaturas
+        </Button>
+      </Card>
 
       <div className="flex gap-2 pt-4">
         <Button asChild variant="outline" className="flex-1">

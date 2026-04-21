@@ -42,6 +42,7 @@ export type PdfDano = {
 export type PdfFoto = {
   url: string;
   item_id: string | null;
+  legenda?: string | null;
 };
 
 const STATUS_TEXT: Record<string, string> = {
@@ -71,8 +72,11 @@ export async function gerarPdfInspecao(args: {
   fotos: PdfFoto[];
   resultado: ResultadoScore;
   danos?: PdfDano[];
+  assinaturaVistoriador?: string | null;
+  assinaturaCliente?: string | null;
+  nomeCliente?: string | null;
 }): Promise<Blob> {
-  const { inspecao, itens, fotos, resultado, danos = [] } = args;
+  const { inspecao, itens, fotos, resultado, danos = [], assinaturaVistoriador, assinaturaCliente, nomeCliente } = args;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -127,7 +131,7 @@ export async function gerarPdfInspecao(args: {
       ["Placa", inspecao.placa || "-"],
       ["Quilometragem", inspecao.km ? `${inspecao.km.toLocaleString("pt-BR")} km` : "-"],
       ["Preco pedido", inspecao.preco_pedido ? `R$ ${Number(inspecao.preco_pedido).toLocaleString("pt-BR")}` : "-"],
-      ["Vendedor", inspecao.vendedor || "-"],
+      ["Vistoriador responsavel", inspecao.vendedor || "-"],
     ],
     headStyles: { fillColor: [36, 70, 180] },
     margin: { left: margin, right: margin },
@@ -307,6 +311,7 @@ export async function gerarPdfInspecao(args: {
     const imgW = 240;
     const imgH = 180;
     const gap = 14;
+    const captionH = 22;
 
     for (const [itemId, lista] of grupos) {
       const meta = itemId !== "_sem_item" ? itemById[itemId] : null;
@@ -327,7 +332,8 @@ export async function gerarPdfInspecao(args: {
       for (const f of lista) {
         const dataUrl = await loadImageAsDataUrl(f.url);
         if (!dataUrl) continue;
-        if (col === 0 && y + imgH > pageHeight - margin) {
+        const blocoH = imgH + (f.legenda ? captionH : 0);
+        if (col === 0 && y + blocoH > pageHeight - margin) {
           doc.addPage();
           y = margin;
         }
@@ -337,14 +343,24 @@ export async function gerarPdfInspecao(args: {
         } catch {
           // ignore
         }
+        if (f.legenda) {
+          doc.setFontSize(8);
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(80);
+          const legendaSafe = f.legenda.replace(/[^\x00-\x7F]/g, "").trim() || f.legenda;
+          const linhas = doc.splitTextToSize(legendaSafe, imgW);
+          doc.text(linhas.slice(0, 2), x, y + imgH + 10);
+          doc.setTextColor(20);
+          doc.setFont("helvetica", "normal");
+        }
         col++;
         if (col >= 2) {
           col = 0;
-          y += imgH + gap;
+          y += imgH + (f.legenda ? captionH : 0) + gap;
         }
       }
       if (col !== 0) {
-        y += imgH + gap;
+        y += imgH + captionH + gap;
       }
       y += 8;
     }
@@ -451,6 +467,45 @@ export async function gerarPdfInspecao(args: {
     248,
     { align: "center" }
   );
+
+  // Assinaturas
+  if (assinaturaVistoriador || assinaturaCliente) {
+    const assY = 320;
+    const boxW = (pageWidth - margin * 2 - 20) / 2;
+    const boxH = 90;
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(36, 70, 180);
+    doc.text("Assinaturas", margin, assY - 14);
+    doc.setTextColor(20);
+
+    // Vistoriador
+    doc.setDrawColor(180);
+    doc.rect(margin, assY, boxW, boxH);
+    if (assinaturaVistoriador) {
+      try { doc.addImage(assinaturaVistoriador, "PNG", margin + 4, assY + 4, boxW - 8, boxH - 22); } catch { /* ignore */ }
+    }
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("Vistoriador responsavel", margin + 4, assY + boxH - 8);
+    if (inspecao.vendedor) {
+      doc.setFont("helvetica", "bold");
+      doc.text(inspecao.vendedor.replace(/[^\x00-\x7F]/g, ""), margin + 4, assY + boxH + 6);
+    }
+
+    // Cliente
+    const xCli = margin + boxW + 20;
+    doc.rect(xCli, assY, boxW, boxH);
+    if (assinaturaCliente) {
+      try { doc.addImage(assinaturaCliente, "PNG", xCli + 4, assY + 4, boxW - 8, boxH - 22); } catch { /* ignore */ }
+    }
+    doc.setFont("helvetica", "normal");
+    doc.text("Cliente / proprietario", xCli + 4, assY + boxH - 8);
+    if (nomeCliente) {
+      doc.setFont("helvetica", "bold");
+      doc.text(nomeCliente.replace(/[^\x00-\x7F]/g, ""), xCli + 4, assY + boxH + 6);
+    }
+  }
 
   // Footer pages
   const pages = doc.getNumberOfPages();

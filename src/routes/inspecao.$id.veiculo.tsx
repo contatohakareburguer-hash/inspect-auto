@@ -173,8 +173,8 @@ function VeiculoForm() {
           </div>
         </div>
         <div>
-          <Label htmlFor="vendedor">Vendedor / contato</Label>
-          <Input id="vendedor" value={form.vendedor} onChange={(e) => update("vendedor", e.target.value)} placeholder="Nome ou telefone" />
+          <Label htmlFor="vendedor">Vistoriador responsável</Label>
+          <Input id="vendedor" value={form.vendedor} onChange={(e) => update("vendedor", e.target.value)} placeholder="Nome do vistoriador / contato" />
         </div>
       </Card>
 

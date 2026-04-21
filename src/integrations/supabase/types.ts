@@ -92,6 +92,7 @@ export type Database = {
           id: string
           inspecao_id: string
           item_id: string | null
+          legenda: string | null
           ordem: number
           storage_path: string
           url: string
@@ -104,6 +105,7 @@ export type Database = {
           id?: string
           inspecao_id: string
           item_id?: string | null
+          legenda?: string | null
           ordem?: number
           storage_path: string
           url: string
@@ -116,6 +118,7 @@ export type Database = {
           id?: string
           inspecao_id?: string
           item_id?: string | null
+          legenda?: string | null
           ordem?: number
           storage_path?: string
           url?: string
@@ -141,6 +144,8 @@ export type Database = {
       inspecoes: {
         Row: {
           ano: number | null
+          assinatura_cliente: string | null
+          assinatura_vistoriador: string | null
           classificacao_final: string | null
           conclusao: string | null
           cor: string | null
@@ -150,6 +155,7 @@ export type Database = {
           km: number | null
           marca: string | null
           modelo: string | null
+          nome_cliente: string | null
           nome_veiculo: string
           observacoes_gerais: string | null
           placa: string
@@ -162,6 +168,8 @@ export type Database = {
         }
         Insert: {
           ano?: number | null
+          assinatura_cliente?: string | null
+          assinatura_vistoriador?: string | null
           classificacao_final?: string | null
           conclusao?: string | null
           cor?: string | null
@@ -171,6 +179,7 @@ export type Database = {
           km?: number | null
           marca?: string | null
           modelo?: string | null
+          nome_cliente?: string | null
           nome_veiculo?: string
           observacoes_gerais?: string | null
           placa?: string
@@ -183,6 +192,8 @@ export type Database = {
         }
         Update: {
           ano?: number | null
+          assinatura_cliente?: string | null
+          assinatura_vistoriador?: string | null
           classificacao_final?: string | null
           conclusao?: string | null
           cor?: string | null
@@ -192,6 +203,7 @@ export type Database = {
           km?: number | null
           marca?: string | null
           modelo?: string | null
+          nome_cliente?: string | null
           nome_veiculo?: string
           observacoes_gerais?: string | null
           placa?: string
