@@ -321,100 +321,116 @@ function InteligentePage() {
         </div>
       </Card>
 
-      <div className="space-y-3">
-        {ANGULOS.map((a) => {
-          const fs = fotos
-            .filter((f) => f.angulo === a.key)
-            .sort((a, b) => a.ordem - b.ordem);
-          const isUp = uploading === a.key;
+      <div className="space-y-5">
+        {GRUPOS.map((grupo) => {
+          const angulosDoGrupo = ANGULOS.filter((a) => a.grupo === grupo);
+          if (angulosDoGrupo.length === 0) return null;
+          const totalGrupo = angulosDoGrupo.reduce(
+            (acc, a) => acc + fotos.filter((f) => f.angulo === a.key).length,
+            0,
+          );
           return (
-            <Card key={a.key} className="p-4">
-              <div className="flex items-start gap-3">
-                <AnguloSvg angulo={a.key} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-semibold">{a.label}</div>
+            <section key={grupo} className="space-y-3">
+              <div className="flex items-center justify-between border-b border-border/60 pb-1">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{grupo}</h2>
+                <span className="text-[10px] text-muted-foreground">{totalGrupo} foto{totalGrupo !== 1 ? "s" : ""}</span>
+              </div>
+              {angulosDoGrupo.map((a) => {
+                const fs = fotos
+                  .filter((f) => f.angulo === a.key)
+                  .sort((x, y) => x.ordem - y.ordem);
+                const isUp = uploading === a.key;
+                return (
+                  <Card key={a.key} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <AnguloSvg angulo={a.key} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="font-semibold">{a.label}</div>
+                          {fs.length > 0 && (
+                            <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success shrink-0">
+                              <Check className="inline h-3 w-3" /> {fs.length}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{a.dica}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs font-medium hover:bg-accent">
+                        {isUp ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Camera className="h-3.5 w-3.5" />
+                        )}
+                        Câmera
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          multiple
+                          className="hidden"
+                          disabled={isUp}
+                          onChange={(e) => {
+                            const fl = e.target.files;
+                            if (fl && fl.length) uploadAngulo(a.key, fl);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs font-medium hover:bg-accent">
+                        <ImagePlus className="h-3.5 w-3.5" /> Galeria
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          disabled={isUp}
+                          onChange={(e) => {
+                            const fl = e.target.files;
+                            if (fl && fl.length) uploadAngulo(a.key, fl);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+
                     {fs.length > 0 && (
-                      <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success shrink-0">
-                        <Check className="inline h-3 w-3" /> {fs.length}
-                      </span>
+                      <div className="mt-3">
+                        <SortablePhotoGrid
+                          photos={fs}
+                          alt={a.label}
+                          onPreview={(f) => setPreviewUrl(f.url)}
+                          onRemove={(f) => removerFoto(f)}
+                          onEditCaption={(f) => setLegendaFoto(f)}
+                          renderBadge={(f) => {
+                            const danosFoto = resultados.find((r) => r.foto_id === f.id)?.danos ?? [];
+                            if (danosFoto.length === 0) return null;
+                            return (
+                              <span className="pointer-events-none absolute top-1 left-1 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
+                                {danosFoto.length}
+                              </span>
+                            );
+                          }}
+                          onReorder={(next) => {
+                            const otherIds = new Set(fs.map((f) => f.id));
+                            setFotos((prev) => [
+                              ...prev.filter((f) => !otherIds.has(f.id)),
+                              ...next.map((f, idx) => ({ ...f, ordem: idx })),
+                            ]);
+                            void persistPhotoOrder(next.map((f) => f.id));
+                          }}
+                        />
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          Toque no lápis para legendar · segure e arraste para reordenar
+                        </p>
+                      </div>
                     )}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{a.dica}</div>
-                </div>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs font-medium hover:bg-accent">
-                  {isUp ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Camera className="h-3.5 w-3.5" />
-                  )}
-                  Câmera
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    multiple
-                    className="hidden"
-                    disabled={isUp}
-                    onChange={(e) => {
-                      const fl = e.target.files;
-                      if (fl && fl.length) uploadAngulo(a.key, fl);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs font-medium hover:bg-accent">
-                  <ImagePlus className="h-3.5 w-3.5" /> Galeria
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    disabled={isUp}
-                    onChange={(e) => {
-                      const fl = e.target.files;
-                      if (fl && fl.length) uploadAngulo(a.key, fl);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-
-              {fs.length > 0 && (
-                <div className="mt-3">
-                  <SortablePhotoGrid
-                    photos={fs}
-                    alt={a.label}
-                    onPreview={(f) => setPreviewUrl(f.url)}
-                    onRemove={(f) => removerFoto(f)}
-                    renderBadge={(f) => {
-                      const danosFoto = resultados.find((r) => r.foto_id === f.id)?.danos ?? [];
-                      if (danosFoto.length === 0) return null;
-                      return (
-                        <span className="pointer-events-none absolute bottom-1 left-1 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
-                          {danosFoto.length}
-                        </span>
-                      );
-                    }}
-                    onReorder={(next) => {
-                      // Atualiza UI mantendo fotos de outros ângulos intactas
-                      const otherIds = new Set(fs.map((f) => f.id));
-                      setFotos((prev) => [
-                        ...prev.filter((f) => !otherIds.has(f.id)),
-                        ...next.map((f, idx) => ({ ...f, ordem: idx })),
-                      ]);
-                      void persistPhotoOrder(next.map((f) => f.id));
-                    }}
-                  />
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Segure e arraste para reordenar
-                  </p>
-                </div>
-              )}
-            </Card>
+                  </Card>
+                );
+              })}
+            </section>
           );
         })}
       </div>
