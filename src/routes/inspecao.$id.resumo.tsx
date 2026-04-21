@@ -314,7 +314,8 @@ function ResumoPage() {
                                   key={idx}
                                   type="button"
                                   onClick={() => setFotoPreview(f.url)}
-                                  className="shrink-0"
+                                  className="shrink-0 text-left"
+                                  title={f.legenda ?? undefined}
                                 >
                                   <img
                                     src={f.url}
@@ -322,6 +323,11 @@ function ResumoPage() {
                                     className="h-16 w-16 rounded-md object-cover"
                                     loading="lazy"
                                   />
+                                  {f.legenda && (
+                                    <p className="mt-1 line-clamp-2 max-w-[64px] text-[9px] text-muted-foreground">
+                                      {f.legenda}
+                                    </p>
+                                  )}
                                 </button>
                               ))}
                             </div>
@@ -372,6 +378,46 @@ function ResumoPage() {
           </div>
         )}
       </div>
+
+      <Card className="p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <PenLine className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Assinaturas</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SignaturePad
+            label="Vistoriador responsável"
+            value={assinaturaVistoriador}
+            onChange={setAssinaturaVistoriador}
+          />
+          <div className="space-y-2">
+            <SignaturePad
+              label="Cliente / proprietário"
+              value={assinaturaCliente}
+              onChange={setAssinaturaCliente}
+            />
+            <div>
+              <Label htmlFor="nome_cliente" className="text-xs">Nome do cliente</Label>
+              <Input
+                id="nome_cliente"
+                value={nomeCliente}
+                onChange={(e) => setNomeCliente(e.target.value)}
+                placeholder="Nome completo"
+                className="h-9"
+              />
+            </div>
+          </div>
+        </div>
+        <Button
+          onClick={salvarAssinaturas}
+          disabled={salvandoAss}
+          variant="outline"
+          className="mt-3 w-full"
+        >
+          {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Salvar assinaturas
+        </Button>
+      </Card>
 
       <div className="flex gap-2 pt-4">
         <Button asChild variant="outline" className="flex-1">
