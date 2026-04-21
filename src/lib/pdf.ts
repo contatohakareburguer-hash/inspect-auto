@@ -311,6 +311,7 @@ export async function gerarPdfInspecao(args: {
     const imgW = 240;
     const imgH = 180;
     const gap = 14;
+    const captionH = 22;
 
     for (const [itemId, lista] of grupos) {
       const meta = itemId !== "_sem_item" ? itemById[itemId] : null;
@@ -331,7 +332,8 @@ export async function gerarPdfInspecao(args: {
       for (const f of lista) {
         const dataUrl = await loadImageAsDataUrl(f.url);
         if (!dataUrl) continue;
-        if (col === 0 && y + imgH > pageHeight - margin) {
+        const blocoH = imgH + (f.legenda ? captionH : 0);
+        if (col === 0 && y + blocoH > pageHeight - margin) {
           doc.addPage();
           y = margin;
         }
@@ -341,14 +343,24 @@ export async function gerarPdfInspecao(args: {
         } catch {
           // ignore
         }
+        if (f.legenda) {
+          doc.setFontSize(8);
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(80);
+          const legendaSafe = f.legenda.replace(/[^\x00-\x7F]/g, "").trim() || f.legenda;
+          const linhas = doc.splitTextToSize(legendaSafe, imgW);
+          doc.text(linhas.slice(0, 2), x, y + imgH + 10);
+          doc.setTextColor(20);
+          doc.setFont("helvetica", "normal");
+        }
         col++;
         if (col >= 2) {
           col = 0;
-          y += imgH + gap;
+          y += imgH + (f.legenda ? captionH : 0) + gap;
         }
       }
       if (col !== 0) {
-        y += imgH + gap;
+        y += imgH + captionH + gap;
       }
       y += 8;
     }
