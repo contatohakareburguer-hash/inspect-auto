@@ -42,6 +42,7 @@ export type PdfDano = {
 export type PdfFoto = {
   url: string;
   item_id: string | null;
+  legenda?: string | null;
 };
 
 const STATUS_TEXT: Record<string, string> = {
@@ -71,8 +72,11 @@ export async function gerarPdfInspecao(args: {
   fotos: PdfFoto[];
   resultado: ResultadoScore;
   danos?: PdfDano[];
+  assinaturaVistoriador?: string | null;
+  assinaturaCliente?: string | null;
+  nomeCliente?: string | null;
 }): Promise<Blob> {
-  const { inspecao, itens, fotos, resultado, danos = [] } = args;
+  const { inspecao, itens, fotos, resultado, danos = [], assinaturaVistoriador, assinaturaCliente, nomeCliente } = args;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -127,7 +131,7 @@ export async function gerarPdfInspecao(args: {
       ["Placa", inspecao.placa || "-"],
       ["Quilometragem", inspecao.km ? `${inspecao.km.toLocaleString("pt-BR")} km` : "-"],
       ["Preco pedido", inspecao.preco_pedido ? `R$ ${Number(inspecao.preco_pedido).toLocaleString("pt-BR")}` : "-"],
-      ["Vendedor", inspecao.vendedor || "-"],
+      ["Vistoriador responsavel", inspecao.vendedor || "-"],
     ],
     headStyles: { fillColor: [36, 70, 180] },
     margin: { left: margin, right: margin },
