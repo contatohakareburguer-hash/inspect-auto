@@ -238,12 +238,6 @@ function InteligentePage() {
     setResultados((p) => p.filter((r) => r.foto_id !== foto.id));
   }
 
-  async function rodarAnalise() {
-    if (fotos.length === 0) {
-      toast.error("Capture ao menos uma foto.");
-      return;
-  }
-
   async function salvarLegenda(foto: FotoCapturada, legenda: string | null) {
     const { error } = await supabase.from("fotos").update({ legenda }).eq("id", foto.id);
     if (error) {
@@ -253,6 +247,12 @@ function InteligentePage() {
     setFotos((p) => p.map((f) => (f.id === foto.id ? { ...f, legenda } : f)));
     toast.success(legenda ? "Legenda salva" : "Legenda removida");
   }
+
+  async function rodarAnalise() {
+    if (fotos.length === 0) {
+      toast.error("Capture ao menos uma foto.");
+      return;
+    }
     setAnalisando(true);
     setResultados([]);
     try {
