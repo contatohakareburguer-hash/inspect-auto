@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
+import { normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
+import { VehicleTypeBadge } from "@/components/VehicleTypeBadge";
 
 export const Route = createFileRoute("/inspecao/$id/veiculo")({
   head: () => ({
@@ -38,6 +40,7 @@ function VeiculoForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [savingFlag, setSavingFlag] = useState<"idle" | "saving" | "saved">("idle");
+  const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
   const [form, setForm] = useState<Form>({
     nome_veiculo: "",
     marca: "",
@@ -55,12 +58,14 @@ function VeiculoForm() {
     if (!user) return;
     supabase
       .from("inspecoes")
-      .select("nome_veiculo, marca, modelo, ano, cor, placa, km, preco_pedido, vendedor")
+      .select("nome_veiculo, marca, modelo, ano, cor, placa, km, preco_pedido, vendedor, tipo_veiculo")
       .eq("id", id)
       .single()
       .then(({ data, error }) => {
         if (error) toast.error(error.message);
         else if (data) {
+          const d = data as typeof data & { tipo_veiculo?: string };
+          setTipoVeiculo(normalizeVehicleType(d.tipo_veiculo));
           setForm({
             nome_veiculo: data.nome_veiculo || "",
             marca: data.marca || "",
@@ -124,6 +129,7 @@ function VeiculoForm() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
+          <div className="mb-1"><VehicleTypeBadge tipo={tipoVeiculo} size="sm" /></div>
           <h1 className="text-2xl font-bold">Cadastro do veículo</h1>
           <p className="text-sm text-muted-foreground">Preencha os dados — tudo é salvo automaticamente</p>
         </div>

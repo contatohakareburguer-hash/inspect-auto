@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
-import { CHECKLIST } from "@/data/checklist";
+import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
+import { VehicleTypeBadge } from "@/components/VehicleTypeBadge";
 import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto, type PdfDano } from "@/lib/pdf";
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
@@ -57,6 +58,8 @@ function ResumoPage() {
   const [assinaturaCliente, setAssinaturaCliente] = useState<string | null>(null);
   const [nomeCliente, setNomeCliente] = useState("");
   const [salvandoAss, setSalvandoAss] = useState(false);
+  const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
+  const checklistAtivo = getChecklist(tipoVeiculo);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
 
@@ -87,8 +90,9 @@ function ResumoPage() {
       if (daRes.error) toast.error("Erro ao carregar danos: " + daRes.error.message);
 
       if (insRes.data) {
-        const ins = insRes.data as PdfInspecao & { assinatura_vistoriador?: string | null; assinatura_cliente?: string | null; nome_cliente?: string | null };
+        const ins = insRes.data as PdfInspecao & { assinatura_vistoriador?: string | null; assinatura_cliente?: string | null; nome_cliente?: string | null; tipo_veiculo?: string | null };
         setInspecao(ins);
+        setTipoVeiculo(normalizeVehicleType(ins.tipo_veiculo));
         setAssinaturaVistoriador(ins.assinatura_vistoriador ?? null);
         setAssinaturaCliente(ins.assinatura_cliente ?? null);
         setNomeCliente(ins.nome_cliente ?? "");
@@ -108,9 +112,11 @@ function ResumoPage() {
 
       // Salvar score e classificação no banco (calculado a partir dos itens)
       if (insRes.data && itRes.data) {
+        const tipoSalvo = normalizeVehicleType((insRes.data as { tipo_veiculo?: string }).tipo_veiculo);
         const itensAvaliados = (itRes.data as PdfItem[]).filter((i) => i.status);
         const res = calcularScore(
-          itensAvaliados.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem }))
+          itensAvaliados.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem })),
+          tipoSalvo,
         );
         await supabase.from("inspecoes").update({
           score_total: res.scoreTotal,
@@ -138,7 +144,8 @@ function ResumoPage() {
 
   const itensComStatus = itens.filter((i) => i.status);
   const resultado = calcularScore(
-    itensComStatus.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem }))
+    itensComStatus.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem })),
+    tipoVeiculo,
   );
 
   const corClass: Record<string, string> = {
@@ -211,6 +218,7 @@ function ResumoPage() {
         <Link to="/" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Link>
+        <div className="mb-1"><VehicleTypeBadge tipo={tipoVeiculo} size="sm" /></div>
         <h1 className="text-2xl font-bold">{inspecao.nome_veiculo || "Inspeção"}</h1>
         <p className="text-sm text-muted-foreground">
           {inspecao.placa && <>Placa {inspecao.placa} · </>}
@@ -274,7 +282,7 @@ function ResumoPage() {
       <div>
         <h2 className="mb-2 text-lg font-semibold">Detalhamento</h2>
         <div className="space-y-3">
-          {CHECKLIST.map((cat) => {
+          {checklistAtivo.map((cat) => {
             const list = itensComStatus.filter((i) => i.categoria === cat.key);
             if (list.length === 0) return null;
             return (

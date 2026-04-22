@@ -13,7 +13,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CHECKLIST, TOTAL_ITENS, type ChecklistItem } from "@/data/checklist";
+import type { ChecklistItem, ChecklistCategoria } from "@/data/checklist";
+import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
 import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import { compressImage } from "@/lib/imageCompress";
 import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
 import { persistPhotoOrder } from "@/lib/photoOrder";
 import { PhotoCaptionDialog } from "@/components/PhotoCaptionDialog";
+import { VehicleTypeBadge } from "@/components/VehicleTypeBadge";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
@@ -56,18 +58,34 @@ function ChecklistPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
+  const checklist: ChecklistCategoria[] = getChecklist(tipoVeiculo);
+  const totalItens = checklist.reduce((s, c) => s + c.itens.length, 0);
   const [itens, setItens] = useState<Record<string, ItemRow>>({});
   const [fotos, setFotos] = useState<FotoRow[]>([]);
-  const [openCat, setOpenCat] = useState<string | null>(CHECKLIST[0].key);
+  const [openCat, setOpenCat] = useState<string | null>(null);
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [legendaFoto, setLegendaFoto] = useState<FotoRow | null>(null);
   const [iaItem, setIaItem] = useState<{ itemId: string; fotos: FotoRow[] } | null>(null);
 
+  // Abre a primeira categoria assim que o checklist for resolvido pelo tipo
+  useEffect(() => {
+    if (checklist.length > 0 && openCat === null) {
+      setOpenCat(checklist[0].key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipoVeiculo]);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([
+      supabase
+        .from("inspecoes")
+        .select("tipo_veiculo")
+        .eq("id", id)
+        .single(),
       supabase
         .from("itens_checklist")
         .select("id, item_key, status, observacao_usuario, sugestao_sistema")
@@ -78,14 +96,15 @@ function ChecklistPage() {
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
-    ]).then(async ([itensRes, fotosRes]) => {
+    ]).then(async ([insRes, itensRes, fotosRes]) => {
+      const tipo = normalizeVehicleType((insRes.data as { tipo_veiculo?: string } | null)?.tipo_veiculo);
+      setTipoVeiculo(tipo);
       const map: Record<string, ItemRow> = {};
       (itensRes.data as ItemRow[] | null)?.forEach((r) => {
         map[r.item_key] = r;
       });
       setItens(map);
       const rows = (fotosRes.data as FotoRow[]) || [];
-      // Refresh signed URLs from storage_path (bucket is private)
       const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
       setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
       setLoading(false);
@@ -112,7 +131,7 @@ function ChecklistPage() {
           [item.key]: { ...existing, status, sugestao_sistema: status && status !== "ok" ? item.sugestao : null },
         }));
     } else {
-      const ordem = CHECKLIST.flatMap((c) => c.itens).findIndex((i) => i.key === item.key);
+      const ordem = checklist.flatMap((c: ChecklistCategoria) => c.itens).findIndex((i: ChecklistItem) => i.key === item.key);
       const { data, error } = await supabase
         .from("itens_checklist")
         .insert({
@@ -183,7 +202,7 @@ function ChecklistPage() {
     if (!user) return null;
     const existing = itens[item.key];
     if (existing && existing.id) return existing;
-    const ordem = CHECKLIST.flatMap((c) => c.itens).findIndex((i) => i.key === item.key);
+    const ordem = checklist.flatMap((c: ChecklistCategoria) => c.itens).findIndex((i: ChecklistItem) => i.key === item.key);
     const { data, error } = await supabase
       .from("itens_checklist")
       .insert({
@@ -306,7 +325,7 @@ function ChecklistPage() {
     const all: { categoria: string; status: StatusItem }[] = Object.values(itens)
       .filter((i) => i.status)
       .map((i) => {
-        const cat = CHECKLIST.find((c) => c.itens.some((it) => it.key === i.item_key))?.key || "";
+        const cat = checklist.find((c: ChecklistCategoria) => c.itens.some((it: ChecklistItem) => it.key === i.item_key))?.key || "";
         return { categoria: cat, status: i.status };
       });
 
@@ -315,7 +334,7 @@ function ChecklistPage() {
       return;
     }
 
-    const r = calcularScore(all);
+    const r = calcularScore(all, tipoVeiculo);
     const { error } = await supabase
       .from("inspecoes")
       .update({
@@ -334,7 +353,7 @@ function ChecklistPage() {
   }
 
   const totalAvaliado = Object.values(itens).filter((i) => i.status).length;
-  const progress = Math.round((totalAvaliado / TOTAL_ITENS) * 100);
+  const progress = totalItens > 0 ? Math.round((totalAvaliado / totalItens) * 100) : 0;
 
   if (loading) {
     return (
@@ -349,9 +368,10 @@ function ChecklistPage() {
       <div>
         <div className="flex items-start justify-between gap-2">
           <div>
+            <div className="mb-1"><VehicleTypeBadge tipo={tipoVeiculo} size="sm" /></div>
             <h1 className="text-2xl font-bold">Checklist</h1>
             <p className="text-sm text-muted-foreground">
-              {totalAvaliado} de {TOTAL_ITENS} itens avaliados
+              {totalAvaliado} de {totalItens} itens avaliados
             </p>
           </div>
           <Link
@@ -366,9 +386,9 @@ function ChecklistPage() {
       </div>
 
       <div className="space-y-3">
-        {CHECKLIST.map((cat) => {
+        {checklist.map((cat: ChecklistCategoria) => {
           const isOpen = openCat === cat.key;
-          const avalCat = cat.itens.filter((it) => itens[it.key]?.status).length;
+          const avalCat = cat.itens.filter((it: ChecklistItem) => itens[it.key]?.status).length;
           return (
             <Card key={cat.key} className="overflow-hidden">
               <button
@@ -389,7 +409,7 @@ function ChecklistPage() {
 
               {isOpen && (
                 <div className="border-t bg-muted/30 p-4 space-y-4">
-                  {cat.itens.map((it) => {
+                  {cat.itens.map((it: ChecklistItem) => {
                     const row = itens[it.key];
                     const fotosItem = fotos
                       .filter((f) => f.item_id === row?.id)

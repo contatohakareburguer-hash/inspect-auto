@@ -28,6 +28,8 @@ import { compressImage } from "@/lib/imageCompress";
 import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
 import { persistPhotoOrder } from "@/lib/photoOrder";
 import { PhotoCaptionDialog } from "@/components/PhotoCaptionDialog";
+import { normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
+import { VehicleTypeBadge } from "@/components/VehicleTypeBadge";
 
 export const Route = createFileRoute("/inspecao/$id/inteligente")({
   head: () => ({
@@ -130,6 +132,7 @@ function InteligentePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
   const [fotos, setFotos] = useState<FotoCapturada[]>([]);
   const [uploading, setUploading] = useState<string | null>(null);
   const [analisando, setAnalisando] = useState(false);
@@ -143,19 +146,22 @@ function InteligentePage() {
       navigate({ to: "/login" });
       return;
     }
-    supabase
-      .from("fotos")
-      .select("id, url, storage_path, angulo, ordem, legenda")
-      .eq("inspecao_id", id)
-      .not("angulo", "is", null)
-      .order("ordem")
-      .order("created_at")
-      .then(async ({ data }) => {
-        const rows = (data as FotoCapturada[]) || [];
-        const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
-        setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.from("inspecoes").select("tipo_veiculo").eq("id", id).single(),
+      supabase
+        .from("fotos")
+        .select("id, url, storage_path, angulo, ordem, legenda")
+        .eq("inspecao_id", id)
+        .not("angulo", "is", null)
+        .order("ordem")
+        .order("created_at"),
+    ]).then(async ([insRes, fotosRes]) => {
+      setTipoVeiculo(normalizeVehicleType((insRes.data as { tipo_veiculo?: string } | null)?.tipo_veiculo));
+      const rows = (fotosRes.data as FotoCapturada[]) || [];
+      const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
+      setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
+      setLoading(false);
+    });
   }, [id, user]);
 
   async function uploadAngulo(angulo: string, files: FileList | File[]) {
@@ -305,7 +311,8 @@ function InteligentePage() {
         <Link to="/inspecao/$id/checklist" params={{ id }} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
+        <div className="flex-1">
+          <div className="mb-1"><VehicleTypeBadge tipo={tipoVeiculo} size="sm" /></div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" /> Inspeção Inteligente
           </h1>

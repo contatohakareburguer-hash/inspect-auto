@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Search, Car } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getVehicleMeta, normalizeVehicleType } from "@/data/vehicleTypes";
 
 export const Route = createFileRoute("/historico")({
   head: () => ({
@@ -26,6 +27,7 @@ type Row = {
   classificacao_final: string | null;
   status: string;
   created_at: string;
+  tipo_veiculo: string | null;
 };
 
 function Historico() {
@@ -39,7 +41,7 @@ function Historico() {
     if (!user) return;
     supabase
       .from("inspecoes")
-      .select("id, nome_veiculo, placa, score_total, classificacao_final, status, created_at")
+      .select("id, nome_veiculo, placa, score_total, classificacao_final, status, created_at, tipo_veiculo")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         setRows((data as Row[]) || []);
@@ -108,8 +110,9 @@ function Historico() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">
-                      {r.nome_veiculo || "Sem nome"}{" "}
+                    <div className="flex items-center gap-1.5 truncate font-semibold">
+                      <span aria-hidden>{getVehicleMeta(normalizeVehicleType(r.tipo_veiculo)).emoji}</span>
+                      <span className="truncate">{r.nome_veiculo || "Sem nome"}</span>
                       {r.placa && <span className="text-muted-foreground">· {r.placa}</span>}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground">
