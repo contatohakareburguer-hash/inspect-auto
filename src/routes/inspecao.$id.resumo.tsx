@@ -112,9 +112,11 @@ function ResumoPage() {
 
       // Salvar score e classificação no banco (calculado a partir dos itens)
       if (insRes.data && itRes.data) {
+        const tipoSalvo = normalizeVehicleType((insRes.data as { tipo_veiculo?: string }).tipo_veiculo);
         const itensAvaliados = (itRes.data as PdfItem[]).filter((i) => i.status);
         const res = calcularScore(
-          itensAvaliados.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem }))
+          itensAvaliados.map((i) => ({ categoria: i.categoria, status: i.status as StatusItem })),
+          tipoSalvo,
         );
         await supabase.from("inspecoes").update({
           score_total: res.scoreTotal,
