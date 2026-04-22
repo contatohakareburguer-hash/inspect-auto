@@ -58,18 +58,34 @@ function ChecklistPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
+  const checklist: ChecklistCategoria[] = getChecklist(tipoVeiculo);
+  const totalItens = checklist.reduce((s, c) => s + c.itens.length, 0);
   const [itens, setItens] = useState<Record<string, ItemRow>>({});
   const [fotos, setFotos] = useState<FotoRow[]>([]);
-  const [openCat, setOpenCat] = useState<string | null>(CHECKLIST[0].key);
+  const [openCat, setOpenCat] = useState<string | null>(null);
   const [exemploItem, setExemploItem] = useState<ChecklistItem | null>(null);
   const [savingMap, setSavingMap] = useState<Record<string, boolean>>({});
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [legendaFoto, setLegendaFoto] = useState<FotoRow | null>(null);
   const [iaItem, setIaItem] = useState<{ itemId: string; fotos: FotoRow[] } | null>(null);
 
+  // Abre a primeira categoria assim que o checklist for resolvido pelo tipo
+  useEffect(() => {
+    if (checklist.length > 0 && openCat === null) {
+      setOpenCat(checklist[0].key);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipoVeiculo]);
+
   useEffect(() => {
     if (!user) return;
     Promise.all([
+      supabase
+        .from("inspecoes")
+        .select("tipo_veiculo")
+        .eq("id", id)
+        .single(),
       supabase
         .from("itens_checklist")
         .select("id, item_key, status, observacao_usuario, sugestao_sistema")
@@ -80,14 +96,15 @@ function ChecklistPage() {
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
-    ]).then(async ([itensRes, fotosRes]) => {
+    ]).then(async ([insRes, itensRes, fotosRes]) => {
+      const tipo = normalizeVehicleType((insRes.data as { tipo_veiculo?: string } | null)?.tipo_veiculo);
+      setTipoVeiculo(tipo);
       const map: Record<string, ItemRow> = {};
       (itensRes.data as ItemRow[] | null)?.forEach((r) => {
         map[r.item_key] = r;
       });
       setItens(map);
       const rows = (fotosRes.data as FotoRow[]) || [];
-      // Refresh signed URLs from storage_path (bucket is private)
       const urlMap = await signedUrls(rows.map((r) => r.storage_path).filter(Boolean));
       setFotos(rows.map((r) => ({ ...r, url: urlMap[r.storage_path] || r.url })));
       setLoading(false);
