@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CHECKLIST as CHECKLIST_DEFAULT, type ChecklistItem, type ChecklistCategoria } from "@/data/checklist";
+import type { ChecklistItem, ChecklistCategoria } from "@/data/checklist";
 import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
 import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
