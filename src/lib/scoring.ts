@@ -1,4 +1,5 @@
 import { CATEGORIAS_CRITICAS } from "@/data/checklist";
+import { getCategoriasCriticas, type VehicleType } from "@/data/vehicleTypes";
 
 export type StatusItem = "ok" | "atencao" | "grave" | null;
 
@@ -20,7 +21,13 @@ export type ResultadoScore = {
   totalAvaliado: number;
 };
 
-export function calcularScore(itens: ItemScore[]): ResultadoScore {
+/**
+ * Calcula score, classificação e alertas críticos.
+ * @param itens lista de itens avaliados
+ * @param tipoVeiculo (opcional) usado para identificar categorias críticas específicas.
+ *                    Default: "carro" — preserva compatibilidade total com o comportamento original.
+ */
+export function calcularScore(itens: ItemScore[], tipoVeiculo: VehicleType = "carro"): ResultadoScore {
   let score = 0;
   let graves = 0;
   let atencao = 0;
@@ -41,22 +48,32 @@ export function calcularScore(itens: ItemScore[]): ResultadoScore {
     }
   }
 
-  // Regras inteligentes
+  // Regras inteligentes — utiliza categorias críticas específicas do tipo de veículo
+  const criticas = getCategoriasCriticas(tipoVeiculo);
   let forcaAltoRisco = false;
   let forcaEvitar = false;
 
-  if ((gravesPorCategoria["motor"] || 0) >= 1) {
+  if ((gravesPorCategoria["motor"] || 0) >= 1 && criticas.includes("motor")) {
     alertas.push("⚠️ Problema GRAVE no motor — risco alto automático.");
     forcaAltoRisco = true;
   }
-  if ((gravesPorCategoria["estrutura"] || 0) >= 1) {
+  if ((gravesPorCategoria["estrutura"] || 0) >= 1 && criticas.includes("estrutura")) {
     alertas.push("🚫 Problema GRAVE estrutural — recomendação: NÃO COMPRAR.");
     forcaAltoRisco = true;
     forcaEvitar = true;
   }
-  if ((gravesPorCategoria["freios"] || 0) >= 1) {
+  if ((gravesPorCategoria["freios"] || 0) >= 1 && criticas.includes("freios")) {
     alertas.push("⚠️ Problema GRAVE nos freios — risco à segurança.");
     forcaAltoRisco = true;
+  }
+  if ((gravesPorCategoria["pneus_rodas"] || 0) >= 1 && criticas.includes("pneus_rodas")) {
+    alertas.push("⚠️ Problema GRAVE em pneus/rodas — risco à segurança.");
+    forcaAltoRisco = true;
+  }
+  if ((gravesPorCategoria["carga"] || 0) >= 1 && criticas.includes("carga")) {
+    alertas.push("🚫 Problema GRAVE na carga/estrutura traseira — não operar.");
+    forcaAltoRisco = true;
+    forcaEvitar = true;
   }
   if (graves >= 3) {
     alertas.push("🚨 Múltiplos problemas graves — alerta crítico.");
