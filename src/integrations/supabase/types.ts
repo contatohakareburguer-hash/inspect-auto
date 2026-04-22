@@ -162,6 +162,7 @@ export type Database = {
           preco_pedido: number | null
           score_total: number
           status: string
+          tipo_veiculo: string
           updated_at: string
           user_id: string
           vendedor: string | null
@@ -186,6 +187,7 @@ export type Database = {
           preco_pedido?: number | null
           score_total?: number
           status?: string
+          tipo_veiculo?: string
           updated_at?: string
           user_id: string
           vendedor?: string | null
@@ -210,6 +212,7 @@ export type Database = {
           preco_pedido?: number | null
           score_total?: number
           status?: string
+          tipo_veiculo?: string
           updated_at?: string
           user_id?: string
           vendedor?: string | null
