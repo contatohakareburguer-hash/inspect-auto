@@ -66,7 +66,11 @@ function Dashboard() {
       toast.error(error?.message || "Erro ao criar");
       return;
     }
-    navigate({ to: "/inspecao/$id/veiculo", params: { id: data.id } });
+    navigate({
+      to: "/inspecao/$id/tipo-veiculo",
+      params: { id: data.id },
+      search: { modo: "checklist" },
+    });
   }
 
   async function novaInspecaoIA() {
@@ -82,7 +86,11 @@ function Dashboard() {
       toast.error(error?.message || "Erro ao criar");
       return;
     }
-    navigate({ to: "/inspecao/$id/inteligente", params: { id: data.id } });
+    navigate({
+      to: "/inspecao/$id/tipo-veiculo",
+      params: { id: data.id },
+      search: { modo: "ia" },
+    });
   }
 
   const total = inspecoes.length;
