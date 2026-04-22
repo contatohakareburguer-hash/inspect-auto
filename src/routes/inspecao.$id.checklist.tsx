@@ -13,7 +13,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CHECKLIST, TOTAL_ITENS, type ChecklistItem } from "@/data/checklist";
+import { CHECKLIST as CHECKLIST_DEFAULT, type ChecklistItem, type ChecklistCategoria } from "@/data/checklist";
+import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
 import { calcularScore, STATUS_LABEL, type StatusItem } from "@/lib/scoring";
 import { Loader2, Camera, ImagePlus, Lightbulb, Check, X, AlertTriangle, Eye, ChevronDown, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import { compressImage } from "@/lib/imageCompress";
 import { SortablePhotoGrid } from "@/components/SortablePhotoGrid";
 import { persistPhotoOrder } from "@/lib/photoOrder";
 import { PhotoCaptionDialog } from "@/components/PhotoCaptionDialog";
+import { VehicleTypeBadge } from "@/components/VehicleTypeBadge";
 
 export const Route = createFileRoute("/inspecao/$id/checklist")({
   head: () => ({
