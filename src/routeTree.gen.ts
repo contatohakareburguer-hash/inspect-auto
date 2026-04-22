@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
+import { Route as InspecaoIdTipoVeiculoRouteImport } from './routes/inspecao.$id.tipo-veiculo'
 import { Route as InspecaoIdResumoRouteImport } from './routes/inspecao.$id.resumo'
 import { Route as InspecaoIdInteligenteRouteImport } from './routes/inspecao.$id.inteligente'
 import { Route as InspecaoIdChecklistRouteImport } from './routes/inspecao.$id.checklist'
@@ -43,6 +44,11 @@ const InspecaoIdVeiculoRoute = InspecaoIdVeiculoRouteImport.update({
   path: '/inspecao/$id/veiculo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InspecaoIdTipoVeiculoRoute = InspecaoIdTipoVeiculoRouteImport.update({
+  id: '/inspecao/$id/tipo-veiculo',
+  path: '/inspecao/$id/tipo-veiculo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InspecaoIdResumoRoute = InspecaoIdResumoRouteImport.update({
   id: '/inspecao/$id/resumo',
   path: '/inspecao/$id/resumo',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
+  '/inspecao/$id/tipo-veiculo': typeof InspecaoIdTipoVeiculoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
+  '/inspecao/$id/tipo-veiculo': typeof InspecaoIdTipoVeiculoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
+  '/inspecao/$id/tipo-veiculo': typeof InspecaoIdTipoVeiculoRoute
   '/inspecao/$id/veiculo': typeof InspecaoIdVeiculoRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
+    | '/inspecao/$id/tipo-veiculo'
     | '/inspecao/$id/veiculo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
+    | '/inspecao/$id/tipo-veiculo'
     | '/inspecao/$id/veiculo'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
+    | '/inspecao/$id/tipo-veiculo'
     | '/inspecao/$id/veiculo'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
   InspecaoIdInteligenteRoute: typeof InspecaoIdInteligenteRoute
   InspecaoIdResumoRoute: typeof InspecaoIdResumoRoute
+  InspecaoIdTipoVeiculoRoute: typeof InspecaoIdTipoVeiculoRoute
   InspecaoIdVeiculoRoute: typeof InspecaoIdVeiculoRoute
 }
 
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InspecaoIdVeiculoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inspecao/$id/tipo-veiculo': {
+      id: '/inspecao/$id/tipo-veiculo'
+      path: '/inspecao/$id/tipo-veiculo'
+      fullPath: '/inspecao/$id/tipo-veiculo'
+      preLoaderRoute: typeof InspecaoIdTipoVeiculoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inspecao/$id/resumo': {
       id: '/inspecao/$id/resumo'
       path: '/inspecao/$id/resumo'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
   InspecaoIdInteligenteRoute: InspecaoIdInteligenteRoute,
   InspecaoIdResumoRoute: InspecaoIdResumoRoute,
+  InspecaoIdTipoVeiculoRoute: InspecaoIdTipoVeiculoRoute,
   InspecaoIdVeiculoRoute: InspecaoIdVeiculoRoute,
 }
 export const routeTree = rootRouteImport
