@@ -4,11 +4,12 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Car, FileText, TrendingUp, Loader2, Sparkles } from "lucide-react";
+import { Plus, Car, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { InstallAppButton } from "@/lib/pwa";
+import { DashboardCharts } from "@/components/DashboardCharts";
 import logoUrl from "@/assets/logo.png";
 
 export const Route = createFileRoute("/")({
@@ -99,74 +100,64 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <img
             src={logoUrl}
             alt="InspectAuto"
-            className="h-12 w-12 rounded-xl shadow-card"
+            className="h-12 w-12 shrink-0 rounded-xl shadow-card"
           />
-          <div>
-            <h1 className="text-2xl font-bold">Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!</h1>
-            <p className="text-sm text-muted-foreground">Pronto para uma nova inspeção?</p>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold sm:text-2xl">
+              Olá, {user?.user_metadata?.full_name?.split(" ")[0] || "inspetor"}!
+            </h1>
+            <p className="text-xs text-muted-foreground sm:text-sm">Pronto para uma nova inspeção?</p>
           </div>
         </div>
         <InstallAppButton className="shrink-0" />
       </div>
 
-      <Card className="p-6 gradient-primary text-primary-foreground shadow-elevated">
-        <h2 className="text-lg font-semibold">Nova inspeção</h2>
-        <p className="mt-1 text-sm opacity-90">Avalie um veículo passo a passo com checklist profissional.</p>
-        <Button
-          onClick={novaInspecao}
-          disabled={creating}
-          variant="secondary"
-          size="lg"
-          className="mt-4 w-full sm:w-auto"
-        >
-          {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-          Iniciar inspeção
-        </Button>
-      </Card>
-
-      <Card className="p-5 border-primary/30 bg-primary/5">
-        <div className="flex items-start gap-3">
-          <div className="rounded-full bg-primary/15 p-2 text-primary">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-base font-semibold">Inspeção Inteligente · IA</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Tire fotos guiadas (frente, traseira, laterais) e a IA detecta riscos, amassados e trincas automaticamente.
-            </p>
-            <Button
-              onClick={novaInspecaoIA}
-              disabled={creatingIA}
-              size="sm"
-              className="mt-3"
-            >
-              {creatingIA ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Iniciar com IA
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <FileText className="h-4 w-4" />
-            <span className="text-xs">Total recente</span>
-          </div>
-          <div className="mt-2 text-2xl font-bold">{total}</div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card className="p-5 gradient-primary text-primary-foreground shadow-elevated">
+          <h2 className="text-base font-semibold">Nova inspeção</h2>
+          <p className="mt-1 text-xs opacity-90">Checklist profissional passo a passo.</p>
+          <Button
+            onClick={novaInspecao}
+            disabled={creating}
+            variant="secondary"
+            size="lg"
+            className="mt-3 w-full"
+          >
+            {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+            Iniciar inspeção
+          </Button>
         </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <TrendingUp className="h-4 w-4" />
-            <span className="text-xs">Finalizadas</span>
+
+        <Card className="p-5 border-primary/30 bg-primary/5 shadow-card">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-primary/15 p-1.5 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <h2 className="text-base font-semibold">Inspeção Inteligente</h2>
           </div>
-          <div className="mt-2 text-2xl font-bold">{finalizadas}</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            IA detecta riscos, amassados e trincas a partir das fotos.
+          </p>
+          <Button
+            onClick={novaInspecaoIA}
+            disabled={creatingIA}
+            size="lg"
+            className="mt-3 w-full"
+          >
+            {creatingIA ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            Iniciar com IA
+          </Button>
         </Card>
       </div>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Visão geral</h2>
+        <DashboardCharts />
+      </section>
 
       <div>
         <div className="mb-3 flex items-center justify-between">
