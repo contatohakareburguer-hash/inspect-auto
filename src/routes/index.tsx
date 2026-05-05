@@ -94,8 +94,7 @@ function Dashboard() {
     });
   }
 
-  const total = inspecoes.length;
-  const finalizadas = inspecoes.filter((i) => i.status === "finalizada").length;
+
 
   return (
     <div className="space-y-6">
