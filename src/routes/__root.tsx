@@ -2,8 +2,9 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouter, useLoca
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { PwaProvider } from "@/lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
-import { Button } from "@/components/ui/button";
-import { LayoutDashboard, History, LogOut } from "lucide-react";
+import { LayoutDashboard, History, BookOpen } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 import appCss from "../styles.css?url";
 import logoUrl from "@/assets/logo.png";
@@ -93,7 +94,7 @@ function RootComponent() {
 }
 
 function AppShell() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
   const router = useRouter();
 
@@ -122,42 +123,52 @@ function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <img
-              src={logoUrl}
-              alt="InspectAuto"
-              className="h-9 w-9 rounded-lg shadow-card"
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar />
+      <div className="flex min-h-screen w-full flex-col bg-background pb-24">
+        <header className="sticky top-0 z-30 border-b bg-card/85 backdrop-blur-md supports-[backdrop-filter]:bg-card/60" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+          <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-3 sm:px-4">
+            <SidebarTrigger className="h-10 w-10 shrink-0" />
+            <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
+              <img
+                src={logoUrl}
+                alt="InspectAuto"
+                className="h-9 w-9 shrink-0 rounded-lg shadow-card"
+              />
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold leading-tight">InspectAuto</div>
+                <div className="text-[10px] leading-tight text-muted-foreground">Inspeção profissional</div>
+              </div>
+            </Link>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-5 sm:px-4 sm:py-6">
+          <Outlet />
+        </main>
+
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur-md"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="mx-auto flex max-w-3xl items-center justify-around px-2 py-1.5">
+            <NavItem to="/" label="Início" icon={<LayoutDashboard className="h-5 w-5" />} active={location.pathname === "/"} />
+            <NavItem
+              to="/historico"
+              label="Histórico"
+              icon={<History className="h-5 w-5" />}
+              active={location.pathname.startsWith("/historico")}
             />
-            <div>
-              <div className="text-sm font-bold leading-tight">InspectAuto</div>
-              <div className="text-[10px] leading-tight text-muted-foreground">Inspeção profissional</div>
-            </div>
-          </Link>
-          <Button variant="ghost" size="sm" onClick={() => signOut()}>
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 py-6">
-        <Outlet />
-      </main>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center justify-around px-2 py-2">
-          <NavItem to="/" label="Início" icon={<LayoutDashboard className="h-5 w-5" />} active={location.pathname === "/"} />
-          <NavItem
-            to="/historico"
-            label="Histórico"
-            icon={<History className="h-5 w-5" />}
-            active={location.pathname.startsWith("/historico")}
-          />
-        </div>
-      </nav>
-    </div>
+            <NavItem
+              to="/manual"
+              label="Manual"
+              icon={<BookOpen className="h-5 w-5" />}
+              active={location.pathname.startsWith("/manual")}
+            />
+          </div>
+        </nav>
+      </div>
+    </SidebarProvider>
   );
 }
 
@@ -175,7 +186,7 @@ function NavItem({
   return (
     <Link
       to={to}
-      className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+      className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors active:scale-95 ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
