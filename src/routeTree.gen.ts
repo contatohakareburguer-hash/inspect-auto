@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ManualRouteImport } from './routes/manual'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
 import { Route as InspecaoIdTipoVeiculoRouteImport } from './routes/inspecao.$id.tipo-veiculo'
@@ -24,6 +26,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManualRoute = ManualRouteImport.update({
+  id: '/manual',
+  path: '/manual',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -32,6 +39,11 @@ const LoginRoute = LoginRouteImport.update({
 const HistoricoRoute = HistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,8 +79,10 @@ const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
@@ -78,8 +92,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
@@ -90,8 +106,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
+  '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
@@ -103,8 +121,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/configuracoes'
     | '/historico'
     | '/login'
+    | '/manual'
     | '/reset-password'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
@@ -114,8 +134,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/configuracoes'
     | '/historico'
     | '/login'
+    | '/manual'
     | '/reset-password'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
@@ -125,8 +147,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/configuracoes'
     | '/historico'
     | '/login'
+    | '/manual'
     | '/reset-password'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
@@ -137,8 +161,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
+  ManualRoute: typeof ManualRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
   InspecaoIdInteligenteRoute: typeof InspecaoIdInteligenteRoute
@@ -156,6 +182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manual': {
+      id: '/manual'
+      path: '/manual'
+      fullPath: '/manual'
+      preLoaderRoute: typeof ManualRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -168,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -217,8 +257,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
+  ManualRoute: ManualRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
   InspecaoIdInteligenteRoute: InspecaoIdInteligenteRoute,
@@ -229,3 +271,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
