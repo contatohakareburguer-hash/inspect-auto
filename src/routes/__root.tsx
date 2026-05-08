@@ -127,19 +127,20 @@ function AppShell() {
       <AppSidebar />
       <div className="flex min-h-screen w-full flex-col bg-background pb-24">
         <header className="sticky top-0 z-30 border-b bg-card/85 backdrop-blur-md supports-[backdrop-filter]:bg-card/60" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-          <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-3 sm:px-4">
-            <SidebarTrigger className="h-10 w-10 shrink-0" />
-            <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="mx-auto grid max-w-3xl grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-3 sm:px-4">
+            <SidebarTrigger className="h-10 w-10 shrink-0 justify-self-start" />
+            <Link to="/" className="flex items-center justify-center gap-2 justify-self-center">
               <img
                 src={logoUrl}
                 alt="InspectAuto"
                 className="h-9 w-9 shrink-0 rounded-lg shadow-card"
               />
-              <div className="min-w-0">
-                <div className="truncate text-sm font-bold leading-tight">InspectAuto</div>
+              <div className="text-center">
+                <div className="text-sm font-bold leading-tight">InspectAuto</div>
                 <div className="text-[10px] leading-tight text-muted-foreground">Inspeção profissional</div>
               </div>
             </Link>
+            <div className="h-10 w-10 shrink-0 justify-self-end" aria-hidden />
           </div>
         </header>
 
