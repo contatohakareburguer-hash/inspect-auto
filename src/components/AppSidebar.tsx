@@ -4,6 +4,7 @@ import {
   History,
   Plus,
   BookOpen,
+  BarChart3,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const items = [
   { title: "Início", url: "/", icon: LayoutDashboard },
   { title: "Nova inspeção", url: "/", icon: Plus, hash: "nova" },
   { title: "Histórico", url: "/historico", icon: History },
+  { title: "Estatísticas", url: "/estatisticas", icon: BarChart3 },
   { title: "Manual do usuário", url: "/manual", icon: BookOpen },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
