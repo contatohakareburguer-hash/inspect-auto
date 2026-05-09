@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine } from "lucide-react";
+import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
