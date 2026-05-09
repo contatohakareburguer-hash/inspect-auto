@@ -501,7 +501,7 @@ function ResumoPage() {
           <PenLine className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-bold">Assinaturas</h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 p-4 sm:grid-cols-2">
           <SignaturePad
             label="Vistoriador responsável"
             value={assinaturaVistoriador}
@@ -525,15 +525,17 @@ function ResumoPage() {
             </div>
           </div>
         </div>
-        <Button
-          onClick={salvarAssinaturas}
-          disabled={salvandoAss}
-          variant="outline"
-          className="mt-3 w-full"
-        >
-          {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Salvar assinaturas
-        </Button>
+        <div className="border-t bg-muted/20 px-4 py-3">
+          <Button
+            onClick={salvarAssinaturas}
+            disabled={salvandoAss}
+            variant="outline"
+            className="w-full active:scale-95"
+          >
+            {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Salvar assinaturas
+          </Button>
+        </div>
       </Card>
 
       <div className="flex gap-2 pt-4">
