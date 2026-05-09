@@ -148,10 +148,15 @@ function ResumoPage() {
     tipoVeiculo,
   );
 
-  const corClass: Record<string, string> = {
-    success: "bg-success text-success-foreground",
-    warning: "bg-warning text-warning-foreground",
-    destructive: "bg-destructive text-destructive-foreground",
+  const corGradient: Record<string, string> = {
+    success: "from-success/95 via-success to-success/85",
+    warning: "from-warning/95 via-warning to-warning/85",
+    destructive: "from-destructive/95 via-destructive to-destructive/85",
+  };
+  const corText: Record<string, string> = {
+    success: "text-success-foreground",
+    warning: "text-warning-foreground",
+    destructive: "text-destructive-foreground",
   };
 
   async function baixarPdf() {
