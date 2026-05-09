@@ -309,3 +309,5 @@ export const CHECKLIST_MOTO: ChecklistCategoria[] = [
     ],
   },
 ];
+
+export const CATEGORIAS_CRITICAS_MOTO = ["motor", "estrutura", "freios", "pneus_rodas"];
