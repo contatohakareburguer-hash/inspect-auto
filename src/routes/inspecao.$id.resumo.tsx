@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Download, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
@@ -148,10 +148,15 @@ function ResumoPage() {
     tipoVeiculo,
   );
 
-  const corClass: Record<string, string> = {
-    success: "bg-success text-success-foreground",
-    warning: "bg-warning text-warning-foreground",
-    destructive: "bg-destructive text-destructive-foreground",
+  const corGradient: Record<string, string> = {
+    success: "from-success/95 via-success to-success/85",
+    warning: "from-warning/95 via-warning to-warning/85",
+    destructive: "from-destructive/95 via-destructive to-destructive/85",
+  };
+  const corText: Record<string, string> = {
+    success: "text-success-foreground",
+    warning: "text-warning-foreground",
+    destructive: "text-destructive-foreground",
   };
 
   async function baixarPdf() {
@@ -212,105 +217,207 @@ function ResumoPage() {
     }
   }
 
-  return (
-    <div className="space-y-5">
-      <div>
-        <Link to="/" className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <div className="mb-1"><VehicleTypeBadge tipo={tipoVeiculo} size="sm" /></div>
-        <h1 className="text-2xl font-bold">{inspecao.nome_veiculo || "Inspeção"}</h1>
-        <p className="text-sm text-muted-foreground">
-          {inspecao.placa && <>Placa {inspecao.placa} · </>}
-          {inspecao.km && <>{Number(inspecao.km).toLocaleString("pt-BR")} km</>}
-        </p>
-      </div>
+  // Geometry for circular score gauge
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const scorePct = Math.max(0, Math.min(100, resultado.scoreTotal));
+  const dashOffset = circumference - (scorePct / 100) * circumference;
 
-      <Card className={`p-6 shadow-elevated ${corClass[resultado.classificacaoColor]}`}>
-        <div className="text-xs font-semibold uppercase opacity-80">Classificação</div>
-        <div className="mt-1 text-3xl font-bold">{resultado.classificacao}</div>
-        <div className="mt-3 flex items-end justify-between">
-          <div>
-            <div className="text-xs opacity-80">Score total</div>
-            <div className="text-4xl font-bold">{resultado.scoreTotal}</div>
+  const totalAvaliados = resultado.totalOk + resultado.totalAtencao + resultado.totalGraves;
+  const pctOk = totalAvaliados ? (resultado.totalOk / totalAvaliados) * 100 : 0;
+  const pctAtencao = totalAvaliados ? (resultado.totalAtencao / totalAvaliados) * 100 : 0;
+  const pctGraves = totalAvaliados ? (resultado.totalGraves / totalAvaliados) * 100 : 0;
+
+  const dataInsp = (inspecao as { created_at?: string }).created_at
+    ? new Date((inspecao as { created_at?: string }).created_at as string)
+    : null;
+
+  return (
+    <div className="space-y-5 pb-6">
+      <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Voltar
+      </Link>
+
+      {/* HERO CARD */}
+      <Card className={`relative overflow-hidden border-0 bg-gradient-to-br shadow-elevated ${corGradient[resultado.classificacaoColor]} ${corText[resultado.classificacaoColor]}`}>
+        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/15 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-black/15 blur-3xl" />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+            backgroundSize: "16px 16px",
+          }}
+        />
+
+        <div className="relative p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <VehicleTypeBadge tipo={tipoVeiculo} size="sm" />
+              <h1 className="mt-2 truncate text-2xl font-bold leading-tight">
+                {inspecao.nome_veiculo || "Inspeção"}
+              </h1>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs opacity-90">
+                {inspecao.placa && (
+                  <span className="inline-flex items-center gap-1"><Car className="h-3 w-3" /> {inspecao.placa}</span>
+                )}
+                {inspecao.km && <span>{Number(inspecao.km).toLocaleString("pt-BR")} km</span>}
+                {dataInsp && (
+                  <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{dataInsp.toLocaleDateString("pt-BR")}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Circular gauge */}
+            <div className="relative shrink-0">
+              <svg width="120" height="120" viewBox="0 0 120 120" className="-rotate-90">
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="currentColor" strokeWidth="8" className="opacity-20" />
+                <circle
+                  cx="60" cy="60" r={radius}
+                  fill="none" stroke="currentColor" strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  style={{ transition: "stroke-dashoffset 1s ease-out" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-3xl font-bold leading-none">{resultado.scoreTotal}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider opacity-80">/ 100</div>
+              </div>
+            </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs opacity-80">Recomendação</div>
-            <div className="text-2xl font-bold">{resultado.conclusao}</div>
+
+          <div className="mt-5 rounded-xl bg-white/15 p-3 ring-1 ring-white/20 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4" />
+              <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">Classificação</div>
+            </div>
+            <div className="mt-0.5 text-xl font-bold">{resultado.classificacao}</div>
+            <div className="mt-2 flex items-center gap-2 text-sm">
+              <TrendingUp className="h-4 w-4 shrink-0" />
+              <span className="font-medium">{resultado.conclusao}</span>
+            </div>
           </div>
+
+          {totalAvaliados > 0 && (
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider opacity-80">
+                <span>Distribuição dos itens</span>
+                <span>{totalAvaliados} avaliados</span>
+              </div>
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-white/20">
+                {pctOk > 0 && <div className="bg-white/95" style={{ width: `${pctOk}%` }} />}
+                {pctAtencao > 0 && <div className="bg-white/60" style={{ width: `${pctAtencao}%` }} />}
+                {pctGraves > 0 && <div className="bg-black/40" style={{ width: `${pctGraves}%` }} />}
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
+      {/* STAT CARDS */}
       <div className="grid grid-cols-3 gap-2">
-        <Card className="p-3 text-center">
-          <div className="text-2xl font-bold text-success">{resultado.totalOk}</div>
-          <div className="text-xs text-muted-foreground">OK</div>
+        <Card className="relative overflow-hidden border-success/20 bg-gradient-to-br from-success/5 to-success/10 p-3 transition-all active:scale-95 hover:shadow-card">
+          <CheckCircle2 className="absolute -right-2 -top-2 h-12 w-12 text-success/15" />
+          <div className="relative">
+            <div className="text-2xl font-bold text-success">{resultado.totalOk}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">OK</div>
+          </div>
         </Card>
-        <Card className="p-3 text-center">
-          <div className="text-2xl font-bold text-warning">{resultado.totalAtencao}</div>
-          <div className="text-xs text-muted-foreground">Atenção</div>
+        <Card className="relative overflow-hidden border-warning/20 bg-gradient-to-br from-warning/5 to-warning/10 p-3 transition-all active:scale-95 hover:shadow-card">
+          <AlertCircle className="absolute -right-2 -top-2 h-12 w-12 text-warning/15" />
+          <div className="relative">
+            <div className="text-2xl font-bold text-warning">{resultado.totalAtencao}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Atenção</div>
+          </div>
         </Card>
-        <Card className="p-3 text-center">
-          <div className="text-2xl font-bold text-destructive">{resultado.totalGraves}</div>
-          <div className="text-xs text-muted-foreground">Graves</div>
+        <Card className="relative overflow-hidden border-destructive/20 bg-gradient-to-br from-destructive/5 to-destructive/10 p-3 transition-all active:scale-95 hover:shadow-card">
+          <XCircle className="absolute -right-2 -top-2 h-12 w-12 text-destructive/15" />
+          <div className="relative">
+            <div className="text-2xl font-bold text-destructive">{resultado.totalGraves}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Graves</div>
+          </div>
         </Card>
       </div>
 
       {resultado.alertas.length > 0 && (
-        <Card className="p-4 border-l-4 border-l-destructive">
-          <div className="mb-2 flex items-center gap-2 font-semibold text-destructive">
-            <AlertTriangle className="h-4 w-4" /> Alertas críticos
+        <Card className="overflow-hidden border-destructive/30 bg-gradient-to-br from-destructive/5 to-transparent p-0">
+          <div className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/10 px-4 py-2.5">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <div className="text-sm font-bold text-destructive">Alertas críticos</div>
+            <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
+              {resultado.alertas.length}
+            </span>
           </div>
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-1.5 p-4 text-sm">
             {resultado.alertas.map((a, i) => (
-              <li key={i}>{a}</li>
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" />
+                <span>{a}</span>
+              </li>
             ))}
           </ul>
         </Card>
       )}
 
       <div className="grid grid-cols-2 gap-2">
-        <Button onClick={baixarPdf} disabled={gerando} className="gradient-primary text-primary-foreground" size="lg">
-          {gerando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-          PDF
+        <Button onClick={baixarPdf} disabled={gerando} className="gradient-primary text-primary-foreground shadow-card active:scale-95" size="lg">
+          {gerando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+          Gerar PDF
         </Button>
-        <Button onClick={compartilharWhatsapp} variant="outline" size="lg">
+        <Button onClick={compartilharWhatsapp} variant="outline" size="lg" className="active:scale-95">
           <Share2 className="mr-2 h-4 w-4" /> WhatsApp
         </Button>
       </div>
 
       <div>
-        <h2 className="mb-2 text-lg font-semibold">Detalhamento</h2>
+        <div className="mb-3 flex items-center gap-2">
+          <Gauge className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold">Detalhamento</h2>
+        </div>
         <div className="space-y-3">
           {checklistAtivo.map((cat) => {
             const list = itensComStatus.filter((i) => i.categoria === cat.key);
             if (list.length === 0) return null;
+            const okCount = list.filter((i) => i.status === "ok").length;
+            const atCount = list.filter((i) => i.status === "atencao").length;
+            const grCount = list.filter((i) => i.status === "grave").length;
             return (
-              <Card key={cat.key} className="overflow-hidden">
-                <div className="border-b bg-muted/40 px-4 py-2 text-sm font-semibold">
-                  {cat.emoji} {cat.nome}
+              <Card key={cat.key} className="overflow-hidden border-border/60 shadow-sm">
+                <div className="flex items-center justify-between gap-2 border-b bg-gradient-to-r from-muted/60 to-muted/20 px-4 py-2.5">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <span className="text-base">{cat.emoji}</span>
+                    {cat.nome}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                    {okCount > 0 && <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-success">{okCount}</span>}
+                    {atCount > 0 && <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-warning">{atCount}</span>}
+                    {grCount > 0 && <span className="rounded-full bg-destructive/15 px-1.5 py-0.5 text-destructive">{grCount}</span>}
+                  </div>
                 </div>
                 <div className="divide-y">
                   {list.map((i) => {
-                    const cor =
-                      i.status === "ok"
-                        ? "text-success"
-                        : i.status === "atencao"
-                        ? "text-warning"
-                        : "text-destructive";
-                    const lbl =
-                      i.status === "ok" ? "OK" : i.status === "atencao" ? "Atenção" : "Grave";
+                    const isOk = i.status === "ok";
+                    const isAt = i.status === "atencao";
+                    const cor = isOk ? "text-success" : isAt ? "text-warning" : "text-destructive";
+                    const bgBadge = isOk ? "bg-success/10" : isAt ? "bg-warning/10" : "bg-destructive/10";
+                    const bgBorder = isOk ? "border-l-success/60" : isAt ? "border-l-warning/60" : "border-l-destructive/60";
+                    const Icon = isOk ? CheckCircle2 : isAt ? AlertCircle : XCircle;
+                    const lbl = isOk ? "OK" : isAt ? "Atenção" : "Grave";
                     return (
-                      <div key={i.item_key} className="p-3 text-sm">
+                      <div key={i.item_key} className={`border-l-2 ${bgBorder} p-3 text-sm`}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="font-medium">{i.item_nome}</div>
-                          <span className={`text-xs font-bold ${cor}`}>{lbl}</span>
+                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${cor} ${bgBadge}`}>
+                            <Icon className="h-3 w-3" /> {lbl}
+                          </span>
                         </div>
                         {i.observacao_usuario && (
-                          <p className="mt-1 text-xs text-muted-foreground">📝 {i.observacao_usuario}</p>
+                          <p className="mt-1.5 rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground">📝 {i.observacao_usuario}</p>
                         )}
                         {i.sugestao_sistema && i.status !== "ok" && (
-                          <p className="mt-1 text-xs text-muted-foreground">💡 {i.sugestao_sistema}</p>
+                          <p className="mt-1.5 rounded-md bg-primary/5 px-2 py-1 text-xs text-muted-foreground">💡 {i.sugestao_sistema}</p>
                         )}
                         {(() => {
                           const fs = fotos.filter((f) => f.item_id && f.item_id === (i as PdfItem & { id?: string }).id);
@@ -322,13 +429,13 @@ function ResumoPage() {
                                   key={idx}
                                   type="button"
                                   onClick={() => setFotoPreview(f.url)}
-                                  className="shrink-0 text-left"
+                                  className="shrink-0 text-left transition-transform active:scale-95"
                                   title={f.legenda ?? undefined}
                                 >
                                   <img
                                     src={f.url}
                                     alt={`evidência ${idx + 1}`}
-                                    className="h-16 w-16 rounded-md object-cover"
+                                    className="h-16 w-16 rounded-lg object-cover ring-1 ring-border"
                                     loading="lazy"
                                   />
                                   {f.legenda && (
@@ -351,11 +458,13 @@ function ResumoPage() {
         </div>
 
         {danos.length > 0 && (
-          <div className="mt-3">
-            <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
-              <Sparkles className="h-5 w-5 text-primary" /> Danos detectados pela IA
-            </h2>
-            <Card className="divide-y">
+          <div className="mt-4">
+            <div className="mb-2 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-bold">Danos detectados pela IA</h2>
+              <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{danos.length}</span>
+            </div>
+            <Card className="divide-y overflow-hidden">
               {danos.map((d) => {
                 const corSev =
                   d.severidade === "grave"
@@ -387,12 +496,12 @@ function ResumoPage() {
         )}
       </div>
 
-      <Card className="p-4">
-        <div className="mb-3 flex items-center gap-2">
+      <Card className="overflow-hidden p-0">
+        <div className="flex items-center gap-2 border-b bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
           <PenLine className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Assinaturas</h2>
+          <h2 className="text-lg font-bold">Assinaturas</h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 p-4 sm:grid-cols-2">
           <SignaturePad
             label="Vistoriador responsável"
             value={assinaturaVistoriador}
@@ -416,15 +525,17 @@ function ResumoPage() {
             </div>
           </div>
         </div>
-        <Button
-          onClick={salvarAssinaturas}
-          disabled={salvandoAss}
-          variant="outline"
-          className="mt-3 w-full"
-        >
-          {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Salvar assinaturas
-        </Button>
+        <div className="border-t bg-muted/20 px-4 py-3">
+          <Button
+            onClick={salvarAssinaturas}
+            disabled={salvandoAss}
+            variant="outline"
+            className="w-full active:scale-95"
+          >
+            {salvandoAss ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Salvar assinaturas
+          </Button>
+        </div>
       </Card>
 
       <div className="flex gap-2 pt-4">
