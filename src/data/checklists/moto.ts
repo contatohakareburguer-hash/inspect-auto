@@ -223,6 +223,89 @@ export const CHECKLIST_MOTO: ChecklistCategoria[] = [
       },
     ],
   },
+  {
+    key: "transmissao",
+    nome: "Transmissão",
+    emoji: "⚙️",
+    itens: [
+      {
+        key: "moto_trans_cambio",
+        nome: "Câmbio e trocas de marcha",
+        oQueObservar: "Marchas engatam suavemente sem pular ou travar.",
+        exemplo: "Pula da 2ª para neutro sozinha = garfo de câmbio gasto.",
+        consequencia: "Reparo interno de câmbio é caro.",
+        sugestao: "Diagnóstico em oficina especializada.",
+      },
+      {
+        key: "moto_trans_coroa_pinhao",
+        nome: "Coroa e pinhão",
+        oQueObservar: "Dentes sem desgaste em forma de gancho.",
+        exemplo: "Dentes pontiagudos = kit no fim.",
+        consequencia: "Corrente pode escapar e travar a roda.",
+        sugestao: "Substituir o kit completo (corrente, coroa e pinhão).",
+      },
+    ],
+  },
+  {
+    key: "combustivel",
+    nome: "Combustível e Escapamento",
+    emoji: "⛽",
+    itens: [
+      {
+        key: "moto_comb_tanque",
+        nome: "Tanque de combustível",
+        oQueObservar: "Sem ferrugem interna, sem amassados, tampa veda.",
+        exemplo: "Tanque com ferrugem entope a injeção.",
+        consequencia: "Falhas no motor e custo de limpeza/reparo.",
+        sugestao: "Limpeza interna ou substituição.",
+      },
+      {
+        key: "moto_comb_filtro",
+        nome: "Filtro e linha de combustível",
+        oQueObservar: "Sem vazamentos, mangueiras flexíveis.",
+        exemplo: "Mangueira ressecada vazando = risco de incêndio.",
+        consequencia: "Risco grave de incêndio.",
+        sugestao: "Substituir mangueiras e filtro.",
+      },
+      {
+        key: "moto_esc_estado",
+        nome: "Estado do escapamento",
+        oQueObservar: "Sem furos, ruído original, fixações firmes.",
+        exemplo: "Escape furado próximo ao coletor.",
+        consequencia: "Multa e perda de desempenho.",
+        sugestao: "Soldar ou substituir.",
+      },
+    ],
+  },
+  {
+    key: "seguranca_extras",
+    nome: "Segurança e Acessórios",
+    emoji: "🛡️",
+    itens: [
+      {
+        key: "moto_seg_abs",
+        nome: "ABS / CBS (se equipado)",
+        oQueObservar: "Luz de ABS apaga após dar partida e andar alguns metros.",
+        exemplo: "Luz acesa permanente = sensor com falha.",
+        consequencia: "ABS desativado em frenagem de emergência.",
+        sugestao: "Diagnóstico eletrônico.",
+      },
+      {
+        key: "moto_seg_buzina",
+        nome: "Buzina",
+        oQueObservar: "Som firme e audível.",
+        exemplo: "Buzina fraca ou rouca.",
+        consequencia: "Multa e risco no trânsito.",
+        sugestao: "Substituir buzina.",
+      },
+      {
+        key: "moto_acc_protetores",
+        nome: "Protetores (motor, mocoto)",
+        oQueObservar: "Fixação firme, sem trincas após quedas.",
+        exemplo: "Protetor torto após queda indica impacto.",
+        consequencia: "Pode mascarar dano no chassi.",
+        sugestao: "Realinhar/substituir e investigar quadro.",
+      },
+    ],
+  },
 ];
-
-export const CATEGORIAS_CRITICAS_MOTO = ["motor", "estrutura", "freios", "pneus_rodas"];
