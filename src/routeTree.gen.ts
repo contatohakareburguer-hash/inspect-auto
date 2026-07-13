@@ -14,6 +14,7 @@ import { Route as ManualRouteImport } from './routes/manual'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as EstatisticasRouteImport } from './routes/estatisticas'
+import { Route as ConsultaPlacaRouteImport } from './routes/consulta-placa'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
@@ -45,6 +46,11 @@ const HistoricoRoute = HistoricoRouteImport.update({
 const EstatisticasRoute = EstatisticasRouteImport.update({
   id: '/estatisticas',
   path: '/estatisticas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsultaPlacaRoute = ConsultaPlacaRouteImport.update({
+  id: '/consulta-placa',
+  path: '/consulta-placa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -86,6 +92,7 @@ const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/configuracoes'
+    | '/consulta-placa'
     | '/estatisticas'
     | '/historico'
     | '/login'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/configuracoes'
+    | '/consulta-placa'
     | '/estatisticas'
     | '/historico'
     | '/login'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/configuracoes'
+    | '/consulta-placa'
     | '/estatisticas'
     | '/historico'
     | '/login'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ConsultaPlacaRoute: typeof ConsultaPlacaRoute
   EstatisticasRoute: typeof EstatisticasRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/estatisticas'
       fullPath: '/estatisticas'
       preLoaderRoute: typeof EstatisticasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consulta-placa': {
+      id: '/consulta-placa'
+      path: '/consulta-placa'
+      fullPath: '/consulta-placa'
+      preLoaderRoute: typeof ConsultaPlacaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -278,6 +298,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  ConsultaPlacaRoute: ConsultaPlacaRoute,
   EstatisticasRoute: EstatisticasRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
