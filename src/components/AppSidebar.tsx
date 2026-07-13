@@ -5,6 +5,7 @@ import {
   Plus,
   BookOpen,
   BarChart3,
+  Search,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -27,6 +28,7 @@ import logoUrl from "@/assets/logo.png";
 const items = [
   { title: "Início", url: "/", icon: LayoutDashboard },
   { title: "Nova inspeção", url: "/", icon: Plus, hash: "nova" },
+  { title: "Consulta de placa", url: "/consulta-placa", icon: Search },
   { title: "Histórico", url: "/historico", icon: History },
   { title: "Estatísticas", url: "/estatisticas", icon: BarChart3 },
   { title: "Manual do usuário", url: "/manual", icon: BookOpen },
