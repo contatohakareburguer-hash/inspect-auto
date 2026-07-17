@@ -187,7 +187,7 @@ function NavItem({
   return (
     <Link
       to={to}
-      className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors active:scale-95 ${
+      className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors active:scale-95 ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
