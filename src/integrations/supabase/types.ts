@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_logs: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_errors: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          scope: string
+          stack: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          scope: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          scope?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          archived: boolean
+          created_at: string
+          id: string
+          last_message_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       danos_detectados: {
         Row: {
           angulo: string | null
@@ -272,32 +359,192 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          error: string | null
+          id: string
+          model: string | null
+          parts: Json | null
+          role: string
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          conversation_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          model?: string | null
+          parts?: Json | null
+          role: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          model?: string | null
+          parts?: Json | null
+          role?: string
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          blocked_reason: string | null
           created_at: string
           email: string | null
           id: string
+          is_blocked: boolean
           nome: string | null
+          plan: string
+          tema: string
           tipo_login: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          blocked_reason?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          is_blocked?: boolean
           nome?: string | null
+          plan?: string
+          tema?: string
           tipo_login?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          blocked_reason?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          is_blocked?: boolean
           nome?: string | null
+          plan?: string
+          tema?: string
           tipo_login?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: string
+          provider: string | null
+          provider_ref: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          provider?: string | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: string
+          provider?: string | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage_logs: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          model: string | null
+          tokens_in: number | null
+          tokens_out: number | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          model?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          model?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -307,10 +554,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -437,6 +690,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
