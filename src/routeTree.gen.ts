@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
@@ -17,16 +18,24 @@ import { Route as EstatisticasRouteImport } from './routes/estatisticas'
 import { Route as ConsultaPlacaRouteImport } from './routes/consulta-placa'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as InspecaoIdVeiculoRouteImport } from './routes/inspecao.$id.veiculo'
 import { Route as InspecaoIdTipoVeiculoRouteImport } from './routes/inspecao.$id.tipo-veiculo'
 import { Route as InspecaoIdResumoRouteImport } from './routes/inspecao.$id.resumo'
 import { Route as InspecaoIdInteligenteRouteImport } from './routes/inspecao.$id.inteligente'
 import { Route as InspecaoIdChecklistRouteImport } from './routes/inspecao.$id.checklist'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManualRoute = ManualRouteImport.update({
@@ -64,6 +73,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const InspecaoIdVeiculoRoute = InspecaoIdVeiculoRouteImport.update({
   id: '/inspecao/$id/veiculo',
   path: '/inspecao/$id/veiculo',
@@ -89,6 +110,12 @@ const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
   path: '/inspecao/$id/checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -103,8 +130,12 @@ export interface FileRoutesByFullPath {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -119,8 +150,12 @@ export interface FileRoutesByTo {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -136,8 +171,12 @@ export interface FileRoutesById {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
+  '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -154,8 +193,12 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/manual'
+    | '/mcp'
     | '/reset-password'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -170,8 +213,12 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/manual'
+    | '/mcp'
     | '/reset-password'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -186,8 +233,12 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/manual'
+    | '/mcp'
     | '/reset-password'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -203,8 +254,12 @@ export interface RootRouteChildren {
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   ManualRoute: typeof ManualRoute
+  McpRoute: typeof McpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
   InspecaoIdInteligenteRoute: typeof InspecaoIdInteligenteRoute
   InspecaoIdResumoRoute: typeof InspecaoIdResumoRoute
@@ -219,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manual': {
@@ -270,6 +332,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inspecao/$id/veiculo': {
       id: '/inspecao/$id/veiculo'
       path: '/inspecao/$id/veiculo'
@@ -305,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InspecaoIdChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
       path: '/.lovable/oauth/consent'
@@ -323,8 +406,13 @@ const rootRouteChildren: RootRouteChildren = {
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   ManualRoute: ManualRoute,
+  McpRoute: McpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
   InspecaoIdInteligenteRoute: InspecaoIdInteligenteRoute,
   InspecaoIdResumoRoute: InspecaoIdResumoRoute,

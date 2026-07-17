@@ -12,6 +12,9 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Entrar — InspectAuto" },
@@ -21,32 +24,52 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+function safeNext(next: string | undefined): string | null {
+  if (!next) return null;
+  if (!next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 type Mode = "login" | "signup" | "reset";
 
 function LoginPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const nextPath = safeNext(next);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function goPostAuth() {
+    if (nextPath) {
+      window.location.href = nextPath;
+      return;
+    }
+    navigate({ to: "/" });
+  }
+
   useEffect(() => {
-    if (user) navigate({ to: "/" });
-  }, [user, navigate]);
+    if (user) goPostAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
+      const emailRedirect = nextPath
+        ? `${window.location.origin}${nextPath}`
+        : window.location.origin;
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: nome },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: emailRedirect,
           },
         });
         if (error) throw error;
@@ -56,7 +79,7 @@ function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Bem-vindo!");
-        navigate({ to: "/" });
+        goPostAuth();
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + "/reset-password",
@@ -75,8 +98,11 @@ function LoginPage() {
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(true);
     try {
+      const redirectUri = nextPath
+        ? `${window.location.origin}${nextPath}`
+        : window.location.origin;
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectUri,
       });
       if (result.error) {
         toast.error(`Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}. Verifique se o provider está ativo no painel.`);
@@ -84,7 +110,7 @@ function LoginPage() {
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/" });
+      goPostAuth();
     } catch (err: any) {
       toast.error(err.message || "Erro no login social");
       setLoading(false);
