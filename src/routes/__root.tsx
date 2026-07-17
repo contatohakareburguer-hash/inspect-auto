@@ -125,9 +125,9 @@ function AppShell() {
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
-      <div className="flex min-h-screen w-full flex-col bg-background pb-24">
+      <div className="flex min-h-screen w-full flex-col bg-background pb-28 sm:pb-24">
         <header className="sticky top-0 z-30 border-b bg-card/85 backdrop-blur-md supports-[backdrop-filter]:bg-card/60" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-          <div className="mx-auto grid max-w-3xl grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-3 sm:px-4">
+          <div className="mx-auto grid max-w-3xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3.5 sm:px-6">
             <SidebarTrigger className="h-10 w-10 shrink-0 justify-self-start" />
             <Link to="/" className="flex items-center justify-center gap-2 justify-self-center">
               <img
@@ -144,7 +144,7 @@ function AppShell() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-3xl flex-1 px-3 py-5 sm:px-4 sm:py-6">
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           <Outlet />
         </main>
 
@@ -152,7 +152,7 @@ function AppShell() {
           className="fixed bottom-0 left-0 right-0 z-30 border-t bg-card/95 backdrop-blur-md"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div className="mx-auto flex max-w-3xl items-center justify-around px-2 py-1.5">
+          <div className="mx-auto flex max-w-3xl items-center justify-around gap-1 px-3 py-2">
             <NavItem to="/" label="Início" icon={<LayoutDashboard className="h-5 w-5" />} active={location.pathname === "/"} />
             <NavItem
               to="/historico"
@@ -187,7 +187,7 @@ function NavItem({
   return (
     <Link
       to={to}
-      className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors active:scale-95 ${
+      className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-medium transition-colors active:scale-95 ${
         active ? "text-primary" : "text-muted-foreground hover:text-foreground"
       }`}
     >
