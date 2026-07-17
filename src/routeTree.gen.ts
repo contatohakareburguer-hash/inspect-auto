@@ -22,6 +22,7 @@ import { Route as InspecaoIdTipoVeiculoRouteImport } from './routes/inspecao.$id
 import { Route as InspecaoIdResumoRouteImport } from './routes/inspecao.$id.resumo'
 import { Route as InspecaoIdInteligenteRouteImport } from './routes/inspecao.$id.inteligente'
 import { Route as InspecaoIdChecklistRouteImport } from './routes/inspecao.$id.checklist'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -88,6 +89,11 @@ const InspecaoIdChecklistRoute = InspecaoIdChecklistRouteImport.update({
   path: '/inspecao/$id/checklist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/manual': typeof ManualRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/inspecao/$id/checklist': typeof InspecaoIdChecklistRoute
   '/inspecao/$id/inteligente': typeof InspecaoIdInteligenteRoute
   '/inspecao/$id/resumo': typeof InspecaoIdResumoRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/manual'
     | '/reset-password'
+    | '/.lovable/oauth/consent'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/manual'
     | '/reset-password'
+    | '/.lovable/oauth/consent'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/manual'
     | '/reset-password'
+    | '/.lovable/oauth/consent'
     | '/inspecao/$id/checklist'
     | '/inspecao/$id/inteligente'
     | '/inspecao/$id/resumo'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ManualRoute: typeof ManualRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   InspecaoIdChecklistRoute: typeof InspecaoIdChecklistRoute
   InspecaoIdInteligenteRoute: typeof InspecaoIdInteligenteRoute
   InspecaoIdResumoRoute: typeof InspecaoIdResumoRoute
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InspecaoIdChecklistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ManualRoute: ManualRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   InspecaoIdChecklistRoute: InspecaoIdChecklistRoute,
   InspecaoIdInteligenteRoute: InspecaoIdInteligenteRoute,
   InspecaoIdResumoRoute: InspecaoIdResumoRoute,

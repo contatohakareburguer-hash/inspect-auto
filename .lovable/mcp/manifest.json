@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ogclwbtarqfyyvdomfmp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "inspect-auto-mcp",
+      "version": "0.1.0",
+      "title": "Inspect Auto"
+    },
+    "tools": [
+      {
+        "name": "list_inspections",
+        "title": "Listar inspeções",
+        "description": "Lista as inspeções veiculares do usuário autenticado, ordenadas pela mais recente.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Máximo de inspeções (padrão 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "status": {
+              "description": "Filtrar por status.",
+              "type": "string",
+              "enum": [
+                "em_andamento",
+                "finalizada"
+              ]
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_inspections",
+        "title": "Buscar inspeções",
+        "description": "Busca inspeções do usuário por placa, marca ou modelo (correspondência parcial, case-insensitive).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Trecho da placa, marca ou modelo."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_inspection",
+        "title": "Detalhar inspeção",
+        "description": "Retorna os dados completos de uma inspeção, com itens do checklist e fotos vinculadas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "inspection_id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "description": "ID da inspeção."
+            }
+          },
+          "required": [
+            "inspection_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_stats",
+        "title": "Estatísticas do vistoriador",
+        "description": "Retorna um resumo das inspeções do usuário: totais, finalizadas, em andamento, score médio e distribuição por tipo de veículo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
