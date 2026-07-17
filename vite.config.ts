@@ -6,10 +6,12 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 export default defineConfig({
   vite: {
     plugins: [
+      mcpPlugin(),
       VitePWA({
         registerType: "autoUpdate",
         injectRegister: false, // we register manually with iframe/preview guard
