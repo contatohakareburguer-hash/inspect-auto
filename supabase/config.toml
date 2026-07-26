@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.consulta-placa]
 verify_jwt = false
+
+[functions.analise-risco]
+verify_jwt = false
