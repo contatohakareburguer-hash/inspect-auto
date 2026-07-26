@@ -31,7 +31,9 @@ const items = [
   { title: "Início", url: "/", icon: LayoutDashboard },
   { title: "Nova inspeção", url: "/", icon: Plus, hash: "nova" },
   { title: "Consulta de placa", url: "/consulta-placa", icon: Search },
+  { title: "Análise de risco (IA)", url: "/analise-risco", icon: ShieldAlert },
   { title: "Histórico", url: "/historico", icon: History },
+
   { title: "Estatísticas", url: "/estatisticas", icon: BarChart3 },
   { title: "Manual do usuário", url: "/manual", icon: BookOpen },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
