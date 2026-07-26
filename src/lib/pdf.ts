@@ -85,6 +85,20 @@ async function loadImageAsDataUrl(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * jsPDF usa fontes WinAnsi; acentos podem sair corrompidos.
+ * Normaliza removendo diacriticos e caracteres fora do ASCII.
+ */
+function ascii(valor: string | null | undefined): string {
+  if (!valor) return "N/A";
+  return valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E\n]/g, "")
+    .trim() || "N/A";
+}
+
+
 export async function gerarPdfInspecao(args: {
   inspecao: PdfInspecao;
   itens: PdfItem[];
