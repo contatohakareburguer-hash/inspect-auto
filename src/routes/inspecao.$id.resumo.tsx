@@ -496,6 +496,69 @@ function ResumoPage() {
         )}
       </div>
 
+      {/* LAUDO DE ANÁLISE DE RISCO (IA) */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold">Análise de risco (IA)</h2>
+        </div>
+
+        {laudo ? (
+          <>
+            <LaudoRiscoCard laudo={laudo} geradoEm={laudo.created_at} />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="outline"
+                className="h-11 flex-1"
+                onClick={() => void gerarLaudo()}
+                disabled={gerandoLaudo}
+              >
+                {gerandoLaudo ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Gerando…</>
+                ) : (
+                  <><Sparkles className="mr-2 h-4 w-4" />Refazer análise</>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-11 text-destructive hover:text-destructive sm:w-auto"
+                onClick={() => void removerLaudo()}
+                disabled={gerandoLaudo}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir laudo
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">
+              Gere um laudo técnico de risco para seguradora a partir das fotos desta inspeção:
+              condições gerais, avarias por região, pneus, painel e percentual de risco de 0 a 100%.
+              O laudo entra em uma seção dedicada do PDF.
+            </p>
+            <Button
+              className="mt-3 h-12 w-full text-base"
+              onClick={() => void gerarLaudo()}
+              disabled={gerandoLaudo || fotoIds.length === 0}
+            >
+              {gerandoLaudo ? (
+                <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Analisando fotos…</>
+              ) : (
+                <><ShieldAlert className="mr-2 h-5 w-5" />Gerar laudo de risco</>
+              )}
+            </Button>
+            {fotoIds.length === 0 && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Adicione fotos à inspeção para habilitar a análise de risco.
+              </p>
+            )}
+          </Card>
+        )}
+      </section>
+
+
+
       <Card className="overflow-hidden p-0">
         <div className="flex items-center gap-2 border-b bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
           <PenLine className="h-5 w-5 text-primary" />
