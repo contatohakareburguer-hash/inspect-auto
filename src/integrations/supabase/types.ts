@@ -359,6 +359,86 @@ export type Database = {
           },
         ]
       }
+      laudos_risco: {
+        Row: {
+          ano_veiculo: string | null
+          conclusao: string | null
+          condicoes_gerais: string | null
+          cor: string | null
+          created_at: string
+          danos_nao_visiveis: string | null
+          fotos_ids: Json
+          frente_veiculo: string | null
+          id: string
+          inspecao_id: string | null
+          marca: string | null
+          modelo: string | null
+          origem: string
+          painel: string | null
+          para_brisa: string | null
+          pneus: string | null
+          quilometragem: string | null
+          risco_seguradora: number | null
+          traseira_veiculo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano_veiculo?: string | null
+          conclusao?: string | null
+          condicoes_gerais?: string | null
+          cor?: string | null
+          created_at?: string
+          danos_nao_visiveis?: string | null
+          fotos_ids?: Json
+          frente_veiculo?: string | null
+          id?: string
+          inspecao_id?: string | null
+          marca?: string | null
+          modelo?: string | null
+          origem?: string
+          painel?: string | null
+          para_brisa?: string | null
+          pneus?: string | null
+          quilometragem?: string | null
+          risco_seguradora?: number | null
+          traseira_veiculo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano_veiculo?: string | null
+          conclusao?: string | null
+          condicoes_gerais?: string | null
+          cor?: string | null
+          created_at?: string
+          danos_nao_visiveis?: string | null
+          fotos_ids?: Json
+          frente_veiculo?: string | null
+          id?: string
+          inspecao_id?: string | null
+          marca?: string | null
+          modelo?: string | null
+          origem?: string
+          painel?: string | null
+          para_brisa?: string | null
+          pneus?: string | null
+          quilometragem?: string | null
+          risco_seguradora?: number | null
+          traseira_veiculo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "laudos_risco_inspecao_id_fkey"
+            columns: ["inspecao_id"]
+            isOneToOne: false
+            referencedRelation: "inspecoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
