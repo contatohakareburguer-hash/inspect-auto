@@ -175,6 +175,39 @@ function ResumoPage() {
     destructive: "text-destructive-foreground",
   };
 
+  async function gerarLaudo() {
+    if (!user || fotoIds.length === 0) return;
+    setGerandoLaudo(true);
+    try {
+      const resultadoIa = await gerarLaudoPorFotos(fotoIds);
+      if (laudo) await excluirLaudo(laudo.id);
+      const salvo = await salvarLaudo({
+        user_id: user.id,
+        inspecao_id: id,
+        origem: "inspecao",
+        laudo: resultadoIa,
+        fotos_ids: fotoIds,
+      });
+      setLaudo(salvo);
+      toast.success("Laudo de risco gerado");
+    } catch (e: any) {
+      toast.error("Erro ao gerar laudo: " + (e?.message ?? "falha inesperada"));
+    } finally {
+      setGerandoLaudo(false);
+    }
+  }
+
+  async function removerLaudo() {
+    if (!laudo) return;
+    try {
+      await excluirLaudo(laudo.id);
+      setLaudo(null);
+      toast.success("Laudo excluído");
+    } catch (e: any) {
+      toast.error("Erro ao excluir laudo: " + e.message);
+    }
+  }
+
   async function baixarPdf() {
     if (!inspecao) return;
     setGerando(true);
@@ -188,7 +221,9 @@ function ResumoPage() {
         assinaturaVistoriador,
         assinaturaCliente,
         nomeCliente,
+        laudoRisco: laudo,
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
