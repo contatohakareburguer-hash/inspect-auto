@@ -45,6 +45,25 @@ export type PdfFoto = {
   legenda?: string | null;
 };
 
+export type PdfLaudoRisco = {
+  marca: string | null;
+  modelo: string | null;
+  ano_veiculo: string | null;
+  cor: string | null;
+  condicoes_gerais: string | null;
+  frente_veiculo: string | null;
+  para_brisa: string | null;
+  traseira_veiculo: string | null;
+  danos_nao_visiveis: string | null;
+  quilometragem: string | null;
+  pneus: string | null;
+  painel: string | null;
+  risco_seguradora: number | null;
+  conclusao: string | null;
+  created_at?: string | null;
+};
+
+
 const STATUS_TEXT: Record<string, string> = {
   ok: "OK",
   atencao: "Atencao",
