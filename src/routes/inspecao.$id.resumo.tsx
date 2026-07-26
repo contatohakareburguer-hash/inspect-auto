@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
@@ -15,6 +15,15 @@ import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto, type Pd
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
 import { SignaturePad } from "@/components/SignaturePad";
+import { LaudoRiscoCard } from "@/components/LaudoRiscoCard";
+import {
+  buscarLaudoDaInspecao,
+  excluirLaudo,
+  gerarLaudoPorFotos,
+  salvarLaudo,
+  type LaudoRiscoRow,
+} from "@/lib/laudoRisco";
+
 import {
   AlertDialog,
   AlertDialogAction,
