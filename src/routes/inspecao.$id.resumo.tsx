@@ -69,8 +69,12 @@ function ResumoPage() {
   const [salvandoAss, setSalvandoAss] = useState(false);
   const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
   const checklistAtivo = getChecklist(tipoVeiculo);
+  const [fotoIds, setFotoIds] = useState<string[]>([]);
+  const [laudo, setLaudo] = useState<LaudoRiscoRow | null>(null);
+  const [gerandoLaudo, setGerandoLaudo] = useState(false);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!user) return;
