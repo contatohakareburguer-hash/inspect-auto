@@ -94,8 +94,10 @@ export async function gerarPdfInspecao(args: {
   assinaturaVistoriador?: string | null;
   assinaturaCliente?: string | null;
   nomeCliente?: string | null;
+  laudoRisco?: PdfLaudoRisco | null;
 }): Promise<Blob> {
-  const { inspecao, itens, fotos, resultado, danos = [], assinaturaVistoriador, assinaturaCliente, nomeCliente } = args;
+  const { inspecao, itens, fotos, resultado, danos = [], assinaturaVistoriador, assinaturaCliente, nomeCliente, laudoRisco } = args;
+
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
