@@ -7,8 +7,10 @@ import {
   BarChart3,
   Search,
   Settings,
+  ShieldAlert,
   LogOut,
 } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
