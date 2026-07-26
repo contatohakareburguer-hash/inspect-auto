@@ -87,7 +87,7 @@ function ResumoPage() {
         .order("ordem"),
       supabase
         .from("fotos")
-        .select("url, item_id, storage_path, ordem, legenda")
+        .select("id, url, item_id, storage_path, ordem, legenda")
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
