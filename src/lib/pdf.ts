@@ -453,6 +453,100 @@ export async function gerarPdfInspecao(args: {
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
+  // ===== Laudo de analise de risco (IA) =====
+  if (laudoRisco) {
+    doc.addPage();
+    const risco = Math.min(100, Math.max(0, Math.round(laudoRisco.risco_seguradora ?? 0)));
+    const riscoCor: [number, number, number] =
+      risco <= 25 ? [34, 150, 83] : risco <= 50 ? [225, 160, 30] : risco <= 75 ? [225, 100, 30] : [200, 45, 45];
+
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20);
+    doc.text("Laudo de Analise de Risco (IA)", margin, 80);
+
+    // Faixa com percentual de risco
+    doc.setFillColor(...riscoCor);
+    doc.roundedRect(margin, 96, pageWidth - margin * 2, 52, 8, 8, "F");
+    doc.setTextColor(255);
+    doc.setFontSize(24);
+    doc.text(`Risco para seguradora: ${risco}%`, pageWidth / 2, 128, { align: "center" });
+    doc.setTextColor(20);
+
+    let ly = 172;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("Identificacao pela IA", margin, ly);
+    ly += 6;
+
+    autoTable(doc, {
+      startY: ly,
+      head: [["Marca", "Modelo", "Ano", "Cor"]],
+      body: [[
+        ascii(laudoRisco.marca),
+        ascii(laudoRisco.modelo),
+        ascii(laudoRisco.ano_veiculo),
+        ascii(laudoRisco.cor),
+      ]],
+      theme: "grid",
+      headStyles: { fillColor: [36, 70, 180], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      margin: { left: margin, right: margin },
+    });
+    ly = (doc as any).lastAutoTable.finalY + 20;
+
+    const campos: Array<[string, string | null]> = [
+      ["Condicoes gerais", laudoRisco.condicoes_gerais],
+      ["Frente do veiculo", laudoRisco.frente_veiculo],
+      ["Para-brisa", laudoRisco.para_brisa],
+      ["Traseira do veiculo", laudoRisco.traseira_veiculo],
+      ["Pneus", laudoRisco.pneus],
+      ["Painel", laudoRisco.painel],
+      ["Quilometragem", laudoRisco.quilometragem],
+      ["Danos nao visiveis / indicios", laudoRisco.danos_nao_visiveis],
+    ];
+
+    autoTable(doc, {
+      startY: ly,
+      head: [["Item avaliado", "Analise"]],
+      body: campos.map(([label, valor]) => [label, ascii(valor)]),
+      theme: "striped",
+      headStyles: { fillColor: [36, 70, 180], textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 9, cellPadding: 5 },
+      columnStyles: { 0: { cellWidth: 130, fontStyle: "bold" } },
+      margin: { left: margin, right: margin },
+    });
+    ly = (doc as any).lastAutoTable.finalY + 20;
+
+    if (ly > pageHeight - 160) {
+      doc.addPage();
+      ly = 80;
+    }
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(36, 70, 180);
+    doc.text("Conclusao do laudo de risco", margin, ly);
+    doc.setTextColor(20);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    const conclusaoLinhas = doc.splitTextToSize(
+      ascii(laudoRisco.conclusao),
+      pageWidth - margin * 2,
+    );
+    doc.text(conclusaoLinhas, margin, ly + 16);
+    ly += 16 + conclusaoLinhas.length * 13 + 12;
+
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(
+      "Laudo gerado por inteligencia artificial a partir das fotos da inspecao. Apoio a decisao; nao substitui laudo cautelar oficial.",
+      margin,
+      ly,
+    );
+    doc.setTextColor(20);
+  }
+
+
   // Conclusão final
   doc.addPage();
   doc.setFontSize(20);
