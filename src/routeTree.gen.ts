@@ -17,6 +17,7 @@ import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as EstatisticasRouteImport } from './routes/estatisticas'
 import { Route as ConsultaPlacaRouteImport } from './routes/consulta-placa'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as AnaliseRiscoRouteImport } from './routes/analise-risco'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -66,6 +67,11 @@ const ConsultaPlacaRoute = ConsultaPlacaRouteImport.update({
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnaliseRiscoRoute = AnaliseRiscoRouteImport.update({
+  id: '/analise-risco',
+  path: '/analise-risco',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -124,6 +130,7 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analise-risco': typeof AnaliseRiscoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analise-risco': typeof AnaliseRiscoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
@@ -165,6 +173,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analise-risco': typeof AnaliseRiscoRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/consulta-placa': typeof ConsultaPlacaRoute
   '/estatisticas': typeof EstatisticasRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/analise-risco'
     | '/configuracoes'
     | '/consulta-placa'
     | '/estatisticas'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analise-risco'
     | '/configuracoes'
     | '/consulta-placa'
     | '/estatisticas'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/analise-risco'
     | '/configuracoes'
     | '/consulta-placa'
     | '/estatisticas'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnaliseRiscoRoute: typeof AnaliseRiscoRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConsultaPlacaRoute: typeof ConsultaPlacaRoute
   EstatisticasRoute: typeof EstatisticasRoute
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analise-risco': {
+      id: '/analise-risco'
+      path: '/analise-risco'
+      fullPath: '/analise-risco'
+      preLoaderRoute: typeof AnaliseRiscoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -400,6 +420,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnaliseRiscoRoute: AnaliseRiscoRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   ConsultaPlacaRoute: ConsultaPlacaRoute,
   EstatisticasRoute: EstatisticasRoute,

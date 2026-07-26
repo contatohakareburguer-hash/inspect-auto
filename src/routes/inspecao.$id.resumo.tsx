@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car } from "lucide-react";
+import { Loader2, Share2, ArrowLeft, Trash2, AlertTriangle, Sparkles, PenLine, CheckCircle2, AlertCircle, XCircle, Gauge, FileText, Award, TrendingUp, Calendar, Car, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { calcularScore, type StatusItem } from "@/lib/scoring";
 import { getChecklist, normalizeVehicleType, type VehicleType } from "@/data/vehicleTypes";
@@ -15,6 +15,15 @@ import { gerarPdfInspecao, type PdfInspecao, type PdfItem, type PdfFoto, type Pd
 import { SEVERIDADE_LABEL, TIPO_LABEL } from "@/lib/ia";
 import { signedUrls } from "@/lib/storage";
 import { SignaturePad } from "@/components/SignaturePad";
+import { LaudoRiscoCard } from "@/components/LaudoRiscoCard";
+import {
+  buscarLaudoDaInspecao,
+  excluirLaudo,
+  gerarLaudoPorFotos,
+  salvarLaudo,
+  type LaudoRiscoRow,
+} from "@/lib/laudoRisco";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,8 +69,12 @@ function ResumoPage() {
   const [salvandoAss, setSalvandoAss] = useState(false);
   const [tipoVeiculo, setTipoVeiculo] = useState<VehicleType>("carro");
   const checklistAtivo = getChecklist(tipoVeiculo);
+  const [fotoIds, setFotoIds] = useState<string[]>([]);
+  const [laudo, setLaudo] = useState<LaudoRiscoRow | null>(null);
+  const [gerandoLaudo, setGerandoLaudo] = useState(false);
 
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!user) return;
@@ -74,7 +87,7 @@ function ResumoPage() {
         .order("ordem"),
       supabase
         .from("fotos")
-        .select("url, item_id, storage_path, ordem, legenda")
+        .select("id, url, item_id, storage_path, ordem, legenda")
         .eq("inspecao_id", id)
         .order("ordem")
         .order("created_at"),
@@ -98,7 +111,8 @@ function ResumoPage() {
         setNomeCliente(ins.nome_cliente ?? "");
       }
       setItens((itRes.data as PdfItem[]) || []);
-      const fRows = ((foRes.data as Array<PdfFoto & { storage_path?: string }>) || []);
+      const fRows = ((foRes.data as Array<PdfFoto & { id?: string; storage_path?: string }>) || []);
+      setFotoIds(fRows.map((f) => f.id).filter((v): v is string => !!v));
       const paths = fRows.map((f) => f.storage_path || "").filter(Boolean);
       const urlMap = await signedUrls(paths);
       setFotos(
@@ -108,7 +122,9 @@ function ResumoPage() {
         })),
       );
       setDanos((daRes.data as any[]) || []);
+      buscarLaudoDaInspecao(id).then(setLaudo).catch(() => setLaudo(null));
       setLoading(false);
+
 
       // Salvar score e classificação no banco (calculado a partir dos itens)
       if (insRes.data && itRes.data) {
@@ -159,6 +175,39 @@ function ResumoPage() {
     destructive: "text-destructive-foreground",
   };
 
+  async function gerarLaudo() {
+    if (!user || fotoIds.length === 0) return;
+    setGerandoLaudo(true);
+    try {
+      const resultadoIa = await gerarLaudoPorFotos(fotoIds);
+      if (laudo) await excluirLaudo(laudo.id);
+      const salvo = await salvarLaudo({
+        user_id: user.id,
+        inspecao_id: id,
+        origem: "inspecao",
+        laudo: resultadoIa,
+        fotos_ids: fotoIds,
+      });
+      setLaudo(salvo);
+      toast.success("Laudo de risco gerado");
+    } catch (e: any) {
+      toast.error("Erro ao gerar laudo: " + (e?.message ?? "falha inesperada"));
+    } finally {
+      setGerandoLaudo(false);
+    }
+  }
+
+  async function removerLaudo() {
+    if (!laudo) return;
+    try {
+      await excluirLaudo(laudo.id);
+      setLaudo(null);
+      toast.success("Laudo excluído");
+    } catch (e: any) {
+      toast.error("Erro ao excluir laudo: " + e.message);
+    }
+  }
+
   async function baixarPdf() {
     if (!inspecao) return;
     setGerando(true);
@@ -172,7 +221,9 @@ function ResumoPage() {
         assinaturaVistoriador,
         assinaturaCliente,
         nomeCliente,
+        laudoRisco: laudo,
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -495,6 +546,69 @@ function ResumoPage() {
           </div>
         )}
       </div>
+
+      {/* LAUDO DE ANÁLISE DE RISCO (IA) */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-bold">Análise de risco (IA)</h2>
+        </div>
+
+        {laudo ? (
+          <>
+            <LaudoRiscoCard laudo={laudo} geradoEm={laudo.created_at} />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="outline"
+                className="h-11 flex-1"
+                onClick={() => void gerarLaudo()}
+                disabled={gerandoLaudo}
+              >
+                {gerandoLaudo ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Gerando…</>
+                ) : (
+                  <><Sparkles className="mr-2 h-4 w-4" />Refazer análise</>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-11 text-destructive hover:text-destructive sm:w-auto"
+                onClick={() => void removerLaudo()}
+                disabled={gerandoLaudo}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir laudo
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">
+              Gere um laudo técnico de risco para seguradora a partir das fotos desta inspeção:
+              condições gerais, avarias por região, pneus, painel e percentual de risco de 0 a 100%.
+              O laudo entra em uma seção dedicada do PDF.
+            </p>
+            <Button
+              className="mt-3 h-12 w-full text-base"
+              onClick={() => void gerarLaudo()}
+              disabled={gerandoLaudo || fotoIds.length === 0}
+            >
+              {gerandoLaudo ? (
+                <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Analisando fotos…</>
+              ) : (
+                <><ShieldAlert className="mr-2 h-5 w-5" />Gerar laudo de risco</>
+              )}
+            </Button>
+            {fotoIds.length === 0 && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Adicione fotos à inspeção para habilitar a análise de risco.
+              </p>
+            )}
+          </Card>
+        )}
+      </section>
+
+
 
       <Card className="overflow-hidden p-0">
         <div className="flex items-center gap-2 border-b bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
