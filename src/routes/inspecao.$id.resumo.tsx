@@ -111,7 +111,8 @@ function ResumoPage() {
         setNomeCliente(ins.nome_cliente ?? "");
       }
       setItens((itRes.data as PdfItem[]) || []);
-      const fRows = ((foRes.data as Array<PdfFoto & { storage_path?: string }>) || []);
+      const fRows = ((foRes.data as Array<PdfFoto & { id?: string; storage_path?: string }>) || []);
+      setFotoIds(fRows.map((f) => f.id).filter((v): v is string => !!v));
       const paths = fRows.map((f) => f.storage_path || "").filter(Boolean);
       const urlMap = await signedUrls(paths);
       setFotos(
@@ -121,7 +122,9 @@ function ResumoPage() {
         })),
       );
       setDanos((daRes.data as any[]) || []);
+      buscarLaudoDaInspecao(id).then(setLaudo).catch(() => setLaudo(null));
       setLoading(false);
+
 
       // Salvar score e classificação no banco (calculado a partir dos itens)
       if (insRes.data && itRes.data) {
